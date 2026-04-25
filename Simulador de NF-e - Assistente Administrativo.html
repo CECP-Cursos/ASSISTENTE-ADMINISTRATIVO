@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CECP – Simulador NF-e Mod.55 | Projeto Capacita Brasil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Serif:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:        #0d2b5e;
+    --navy-mid:    #1a3d7c;
+    --navy-light:  #2e5fa3;
+    --navy-pale:   #dce8f8;
+    --white:       #ffffff;
+    --off-white:   #f5f7fa;
+    --gray-100:    #eef2f9;
+    --gray-200:    #d5dff0;
+    --gray-400:    #8fa3c4;
+    --gray-600:    #4a6080;
+    --red:         #c0392b;
+    --red-light:   #fdecea;
+    --green:       #0e7c3a;
+    --green-light: #e6f9ee;
+    --orange:      #d97706;
+    --orange-light:#fff8e1;
+    --gold:        #f59e0b;
+    --shadow-sm:   0 1px 4px rgba(13,43,94,.07);
+    --shadow-md:   0 4px 16px rgba(13,43,94,.11);
+    --shadow-lg:   0 8px 32px rgba(13,43,94,.16);
+    --radius:      6px;
+    --radius-lg:   10px;
+    --sidebar-w:   230px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--off-white); color: var(--navy); min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* ─── TOP BAR ─── */
+  #topbar {
+    background: linear-gradient(90deg, #091e45 0%, #0d2b5e 60%, #1a3d7c 100%);
+    height: 58px; display: flex; align-items: center; padding: 0 20px; gap: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.35); position: sticky; top: 0; z-index: 200;
+  }
+  .topbar-logo { display: flex; align-items: center; gap: 10px; }
+  .topbar-logo img { width: 40px; height: 40px; border-radius: 50%; object-fit: contain; background: rgba(255,255,255,.1); border: 1.5px solid rgba(255,255,255,.25); }
+  .topbar-brand { display: flex; flex-direction: column; }
+  .topbar-brand .brand-name { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: .3px; line-height: 1.2; }
+  .topbar-brand .brand-sub  { font-size: 10px; color: rgba(255,255,255,.5); }
+  .topbar-divider { width: 1px; height: 28px; background: rgba(255,255,255,.15); margin: 0 6px; }
+  .topbar-badge {
+    font-size: 11px; font-family: 'IBM Plex Mono', monospace;
+    background: rgba(14,124,58,.25); border: 1px solid rgba(14,124,58,.45);
+    color: #4de899; padding: 3px 10px; border-radius: 20px; letter-spacing: .3px;
+  }
+  .topbar-badge-sim {
+    font-size: 10px; font-family: 'IBM Plex Mono', monospace;
+    background: rgba(245,158,11,.15); border: 1px solid rgba(245,158,11,.35);
+    color: #fbbf24; padding: 3px 10px; border-radius: 20px;
+  }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .topbar-env { font-size: 10px; font-family: 'IBM Plex Mono', monospace; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); color: rgba(255,255,255,.55); padding: 3px 10px; border-radius: 4px; }
+  .topbar-cnpj { font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: rgba(255,255,255,.35); }
+
+  /* ─── LAYOUT ─── */
+  .app-body { display: flex; flex: 1; }
+
+  /* ─── SIDEBAR ─── */
+  #sidebar {
+    width: var(--sidebar-w); background: #091e45; flex-shrink: 0;
+    display: flex; flex-direction: column;
+    border-right: 1px solid rgba(255,255,255,.07);
+    padding: 12px 0; position: sticky; top: 58px;
+    height: calc(100vh - 58px); overflow-y: auto;
+  }
+  .sidebar-section { margin-bottom: 4px; }
+  .sidebar-label { font-size: 9px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase; color: rgba(255,255,255,.28); padding: 8px 16px 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 16px; cursor: pointer; transition: all .15s;
+    font-size: 12.5px; color: rgba(255,255,255,.52); font-weight: 400;
+    border-left: 2px solid transparent; text-decoration: none;
+  }
+  .nav-item:hover  { color: rgba(255,255,255,.85); background: rgba(255,255,255,.05); }
+  .nav-item.active { color: #fff; background: rgba(46,95,163,.28); border-left-color: #8ec5fc; font-weight: 600; }
+  .nav-item .nav-icon { font-size: 14px; width: 18px; text-align: center; }
+  .nav-badge { margin-left: auto; font-size: 10px; font-family: 'IBM Plex Mono', monospace; background: rgba(255,255,255,.1); padding: 1px 7px; border-radius: 10px; color: rgba(255,255,255,.5); }
+  .sidebar-divider { border: none; border-top: 1px solid rgba(255,255,255,.07); margin: 6px 12px; }
+  .sidebar-footer { padding: 14px 16px; margin-top: auto; }
+  .sidebar-footer p { font-size: 9.5px; color: rgba(255,255,255,.22); line-height: 1.7; }
+
+  /* ─── MAIN ─── */
+  #main { flex: 1; padding: 22px 26px 60px; min-width: 0; }
+
+  /* ─── PAGE HEADER ─── */
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--gray-200); }
+  .page-title { font-family: 'IBM Plex Serif', serif; font-size: 20px; font-weight: 600; color: var(--navy); line-height: 1.2; }
+  .page-breadcrumb { font-size: 11px; color: var(--gray-400); margin-bottom: 3px; }
+  .page-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* ─── CARD ─── */
+  .card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin-bottom: 14px; overflow: hidden; }
+  .card-header { padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--gray-100); }
+  .card-header-icon { width: 28px; height: 28px; border-radius: var(--radius); background: var(--navy-pale); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .card-header h3 { font-size: 13px; font-weight: 600; color: var(--navy); letter-spacing: .1px; }
+  .card-header .badge-doc { margin-left: auto; background: var(--navy-pale); border: 1px solid var(--gray-200); color: var(--navy-light); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; }
+  .card-body { padding: 16px; }
+
+  /* ─── OPERACAO STRIP ─── */
+  .op-strip {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
+    background: var(--navy); padding: 10px 14px; border-radius: var(--radius-lg);
+  }
+  .op-btn {
+    padding: 6px 12px; border-radius: var(--radius); border: 1px solid rgba(255,255,255,.2);
+    cursor: pointer; font-size: 11.5px; font-family: 'IBM Plex Sans', sans-serif; font-weight: 600;
+    color: rgba(255,255,255,.6); background: rgba(255,255,255,.06); transition: all .15s;
+  }
+  .op-btn:hover { background: rgba(255,255,255,.14); color: #fff; }
+  .op-btn.active { background: #8ec5fc; color: var(--navy); border-color: #8ec5fc; }
+  .op-label { font-size: 10px; color: rgba(255,255,255,.35); display: flex; align-items: center; margin-right: 6px; letter-spacing: .5px; text-transform: uppercase; }
+
+  /* ─── FORM ─── */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group.span2 { grid-column: span 2; }
+  .form-group.span3 { grid-column: span 3; }
+  label { font-size: 10px; font-weight: 600; color: var(--gray-600); letter-spacing: .5px; text-transform: uppercase; }
+  input, select, textarea {
+    border: 1px solid var(--gray-200); border-radius: var(--radius);
+    padding: 7px 10px; font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; color: var(--navy);
+    background: var(--white); transition: border-color .15s, box-shadow .15s; outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--navy-light); box-shadow: 0 0 0 3px rgba(46,95,163,.1); }
+  input[readonly] { background: var(--gray-100); }
+  .hint { font-size: 10px; color: var(--gray-400); }
+
+  /* ─── BUTTONS ─── */
+  .btn { font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: var(--radius); border: none; cursor: pointer; transition: all .18s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--navy); color: #fff; }
+  .btn-primary:hover { background: var(--navy-light); }
+  .btn-success { background: var(--green); color: #fff; }
+  .btn-success:hover { background: #0a5e2b; }
+  .btn-danger  { background: var(--red); color: #fff; }
+  .btn-warning { background: var(--orange); color: #fff; }
+  .btn-outline { background: transparent; color: var(--navy); border: 1px solid var(--gray-200); }
+  .btn-outline:hover { background: var(--gray-100); border-color: var(--gray-400); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ─── PRODUCTS TABLE ─── */
+  .produtos-table-wrap { overflow-x: auto; border: 1px solid var(--gray-200); border-radius: var(--radius); }
+  .produtos-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1000px; }
+  .produtos-table th { background: var(--gray-100); color: var(--gray-600); padding: 8px 10px; text-align: left; font-size: 10px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; border-bottom: 1px solid var(--gray-200); }
+  .produtos-table td { padding: 6px 8px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+  .produtos-table tr:last-child td { border-bottom: none; }
+  .produtos-table tr:hover td { background: var(--navy-pale); }
+  .produtos-table input, .produtos-table select { padding: 4px 6px; font-size: 12px; }
+  .btn-del { background: none; border: none; cursor: pointer; color: var(--gray-400); font-size: 14px; transition: color .15s; }
+  .btn-del:hover { color: var(--red); }
+
+  /* ─── CATALOG ─── */
+  .catalogo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; max-height: 220px; overflow-y: auto; padding: 2px; }
+  .cat-item { border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 8px 10px; cursor: pointer; transition: all .12s; background: var(--white); display: flex; align-items: center; gap: 8px; }
+  .cat-item:hover { border-color: var(--navy-light); background: var(--navy-pale); }
+  .cat-icon { font-size: 18px; }
+  .cat-info .cat-nome  { font-size: 11px; font-weight: 600; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cat-info .cat-preco { font-size: 11px; color: var(--green); font-weight: 700; }
+  .cat-info .cat-ncm   { font-size: 10px; color: var(--gray-400); font-family: 'IBM Plex Mono', monospace; }
+
+  /* ─── TOTALS ─── */
+  .totals-strip { background: var(--navy); border-radius: var(--radius-lg); padding: 14px 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; }
+  .total-item label { font-size: 9px; color: rgba(255,255,255,.4); letter-spacing: .6px; text-transform: uppercase; display: block; margin-bottom: 2px; }
+  .total-item span { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 700; color: #8ec5fc; }
+  .total-item.highlight span { color: #fff; font-size: 18px; }
+
+  /* ─── ALERT ─── */
+  .alert { padding: 10px 14px; border-radius: var(--radius); font-size: 12px; display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+  .alert-success { background: var(--green-light); border: 1px solid #a3d9bc; color: #0a5e2b; }
+  .alert-danger   { background: var(--red-light);   border: 1px solid #f4b8b3; color: #922b21; }
+  .alert-warning  { background: var(--orange-light); border: 1px solid #f9d878; color: #7c5200; }
+  .alert-info     { background: var(--navy-pale);   border: 1px solid #b0ccee; color: var(--navy); }
+  .alert-icon     { font-size: 16px; line-height: 1.2; flex-shrink: 0; }
+
+  /* ─── TIMELINE ─── */
+  .timeline { display: flex; flex-direction: column; }
+  .tl-step { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-left: 2px solid var(--gray-200); margin-left: 14px; padding-left: 20px; position: relative; }
+  .tl-step::before { content:''; position:absolute; left:-7px; top:16px; width:12px; height:12px; border-radius:50%; background:var(--gray-200); border:2px solid var(--white); transition:all .3s; }
+  .tl-step.done::before  { background: var(--green); }
+  .tl-step.active::before { background: var(--navy-light); animation: pulse 1s infinite; }
+  .tl-step.error::before { background: var(--red); }
+  .tl-step:last-child { border-left-color: transparent; }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 2px var(--navy-pale);}50%{box-shadow:0 0 0 6px rgba(46,95,163,.12);} }
+  .tl-title { font-weight: 600; font-size: 13px; color: var(--navy); }
+  .tl-desc  { font-size: 11px; color: var(--gray-600); margin-top: 2px; }
+  .tl-badge { margin-left: auto; flex-shrink: 0; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+  .tl-badge.ok      { background: var(--green-light); color: var(--green); }
+  .tl-badge.running { background: var(--navy-pale); color: var(--navy-light); }
+  .tl-badge.fail    { background: var(--red-light); color: var(--red); }
+  .tl-badge.wait    { background: var(--gray-100); color: var(--gray-600); }
+
+  /* ─── CHAVE ─── */
+  .chave-box { background: var(--navy-pale); border: 1px dashed var(--navy-light); border-radius: var(--radius); padding: 10px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; font-weight: 700; color: var(--navy); letter-spacing: 1px; word-break: break-all; }
+
+  /* ─── DANFE ─── */
+  #danfe-wrap { display: none; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); margin-top: 14px; }
+  .danfe-header { background: var(--navy); color: #fff; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .danfe-header h3 { font-size: 14px; font-weight: 600; }
+  .danfe-body { padding: 20px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+  .danfe-doc { border: 1.5px solid #555; }
+  .danfe-row { display: flex; border-bottom: 1px solid #aaa; }
+  .danfe-cell { padding: 5px 8px; border-right: 1px solid #aaa; }
+  .danfe-cell:last-child { border-right: none; }
+  .danfe-cell label { font-size: 8px; color: #555; display: block; font-family: 'IBM Plex Sans', sans-serif; }
+  .danfe-cell span  { font-size: 11px; font-weight: 700; }
+
+  /* ─── STATUS ─── */
+  .status-badge { padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+  .status-autorizada { background: var(--green-light); color: var(--green); }
+  .status-cancelada  { background: var(--red-light); color: var(--red); }
+  .status-rejeitada  { background: var(--orange-light); color: var(--orange); }
+  .status-pendente   { background: var(--gray-100); color: var(--gray-600); }
+  .status-cce        { background: var(--navy-pale); color: var(--navy-light); }
+
+  /* ─── HISTORY ─── */
+  .history-item { border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 10px 14px; display: flex; gap: 12px; align-items: center; margin-bottom: 8px; cursor: pointer; transition: box-shadow .15s; }
+  .history-item:hover { box-shadow: var(--shadow-md); border-color: var(--navy-light); }
+  .hi-modelo { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: var(--navy-light); min-width: 40px; text-align: center; }
+  .hi-chave  { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--gray-600); word-break: break-all; }
+
+  /* ─── DIFAL ─── */
+  .difal-section { background: var(--orange-light); border: 1px solid #f9d878; border-radius: var(--radius); padding: 12px 14px; margin-top: 10px; }
+  .difal-section h4 { font-size: 12px; font-weight: 700; color: var(--orange); margin-bottom: 8px; }
+
+  /* ─── HELP TABLE ─── */
+  .help-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
+  .help-table th { background: var(--gray-100); color: var(--gray-600); padding: 7px 10px; text-align: left; font-size: 10px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; border-bottom: 1px solid var(--gray-200); }
+  .help-table td { padding: 6px 10px; border-bottom: 1px solid var(--gray-100); }
+  .help-table tr:hover td { background: var(--navy-pale); }
+  .code-mono { font-family: 'IBM Plex Mono', monospace; }
+
+  /* ─── UTILS ─── */
+  .section-title { font-family: 'IBM Plex Serif', serif; font-size: 15px; font-weight: 600; color: var(--navy); margin-bottom: 10px; margin-top: 18px; }
+  .flex     { display: flex; }
+  .gap-8    { gap: 8px; }
+  .gap-10   { gap: 10px; }
+  .mt-10    { margin-top: 10px; }
+  .mt-14    { margin-top: 14px; }
+  .mt-20    { margin-top: 20px; }
+  .text-sm  { font-size: 12px; }
+  .text-xs  { font-size: 11px; }
+  .text-muted { color: var(--gray-600); }
+  .hidden   { display: none !important; }
+  .separator { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0; }
+
+  @media print {
+    #topbar,#sidebar,.page-header,.card:not(#danfe-wrap),.btn { display:none !important; }
+    #danfe-wrap { display: block !important; box-shadow: none; }
+    #main { padding: 0; }
+  }
+  @media (max-width: 900px) {
+    #sidebar { display: none; }
+    .form-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ TOP BAR ═══ -->
+<div id="topbar">
+  <div class="topbar-logo">
+    <img id="logo-img" alt="CECP Logo">
+    <div class="topbar-brand">
+      <div class="brand-name">C.E.C.P. Cursos</div>
+      <div class="brand-sub">Centro de Educação e Capacitação Profissional</div>
+    </div>
+  </div>
+  <div class="topbar-divider"></div>
+  <span class="topbar-badge">● NF-e Mod. 55 v4.00</span>
+  <span class="topbar-badge-sim">⚠ SIMULAÇÃO EDUCACIONAL</span>
+  <div class="topbar-right">
+    <span class="topbar-cnpj">CNPJ 35.863.867/0001-55</span>
+    <div class="topbar-env">PROJETO CAPACITA BRASIL</div>
+  </div>
+</div>
+
+<div class="app-body">
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Emissão</div>
+    <a class="nav-item active" onclick="showSection('sec-emitir')"><span class="nav-icon">📄</span> Nova NF-e</a>
+    <a class="nav-item" onclick="showSection('sec-historico')"><span class="nav-icon">📋</span> Histórico <span class="nav-badge" id="nav-hist-count">0</span></a>
+  </div>
+  <hr class="sidebar-divider">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Pós-Emissão</div>
+    <a class="nav-item" onclick="showSection('sec-eventos')"><span class="nav-icon">📨</span> CC-e / Cancelamento</a>
+  </div>
+  <hr class="sidebar-divider">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Ferramentas</div>
+    <a class="nav-item" onclick="showSection('sec-consulta')"><span class="nav-icon">🔍</span> Consultar NF-e</a>
+    <a class="nav-item" onclick="showSection('sec-ajuda')"><span class="nav-icon">📖</span> CFOP / NCM / CST</a>
+  </div>
+  <div class="sidebar-footer">
+    <p>CECP – C.E.C.P. Cursos<br>CNPJ: 35.863.867/0001-55<br>Projeto Capacita Brasil<br>Simulador Educacional v2.0</p>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div id="main">
+
+<!-- ════════════ SECTION: EMITIR ════════════ -->
+<div id="sec-emitir">
+  <div class="page-header">
+    <div>
+      <div class="page-breadcrumb">NF-e Mod.55 / Emissão</div>
+      <div class="page-title">Nova Nota Fiscal Eletrônica</div>
+    </div>
+    <div class="page-actions">
+      <button class="btn btn-outline btn-sm hidden" id="btn-ver-danfe" onclick="verDanfe()">🖨️ Ver DANFE</button>
+      <button class="btn btn-outline btn-sm hidden" id="btn-nova" onclick="novaNota()">+ Nova Nota</button>
+      <button class="btn btn-primary" onclick="iniciarTransmissao()" id="btn-transmitir">🚀 Transmitir para SEFAZ</button>
+    </div>
+  </div>
+
+  <!-- OPERAÇÃO SELECTOR -->
+  <div class="op-strip">
+    <span class="op-label">Operação:</span>
+    <button class="op-btn active" onclick="setOperacao('venda')">🛒 Venda</button>
+    <button class="op-btn" onclick="setOperacao('compra')">📥 Compra (Entrada)</button>
+    <button class="op-btn" onclick="setOperacao('devolucao')">↩️ Devolução</button>
+    <button class="op-btn" onclick="setOperacao('brinde')">🎁 Brinde</button>
+    <button class="op-btn" onclick="setOperacao('bonificacao')">🎯 Bonificação</button>
+    <button class="op-btn" onclick="setOperacao('conserto')">🔧 Remessa Conserto</button>
+    <button class="op-btn" onclick="setOperacao('transferencia')">🔄 Transferência</button>
+  </div>
+
+  <!-- 1. EMITENTE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon">🏢</div>
+      <h3>1. Dados do Emitente</h3>
+      <span class="badge-doc">NF-e Mod.55</span>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="form-group span2">
+          <label>Razão Social / Nome Empresarial</label>
+          <input type="text" id="emit-nome" value="CECP – Centro de Educação e Capacitação Profissional (C.E.C.P. Cursos)">
+        </div>
+        <div class="form-group">
+          <label>CNPJ</label>
+          <input type="text" id="emit-cnpj" value="35.863.867/0001-55" maxlength="18" oninput="maskCNPJ(this)">
+        </div>
+        <div class="form-group">
+          <label>Inscrição Estadual</label>
+          <input type="text" id="emit-ie" value="240.234.567">
+        </div>
+        <div class="form-group">
+          <label>Regime Tributário</label>
+          <select id="emit-regime" onchange="onRegimeChange()">
+            <option value="1">1 – Simples Nacional</option>
+            <option value="2">2 – Simples Nacional – Excesso</option>
+            <option value="3" selected>3 – Regime Normal (Lucro Real/Presumido)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>UF</label>
+          <select id="emit-uf" onchange="onUFChange('emit')"></select>
+        </div>
+        <div class="form-group">
+          <label>Município</label>
+          <select id="emit-municipio"></select>
+        </div>
+        <div class="form-group span2">
+          <label>Endereço</label>
+          <input type="text" id="emit-end" value="Rua das Flores, 100 – Centro">
+        </div>
+        <div class="form-group">
+          <label>CEP</label>
+          <input type="text" id="emit-cep" value="59600-000" maxlength="9" oninput="maskCEP(this)">
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="text" id="emit-fone" value="(84) 9 9900-0000">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. DESTINATÁRIO -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon">🏭</div>
+      <h3>2. Dados do Destinatário</h3>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="form-group span2">
+          <label>Nome / Razão Social</label>
+          <input type="text" id="dest-nome" value="Empresa Compradora LTDA">
+        </div>
+        <div class="form-group">
+          <label id="dest-doc-label">CNPJ / CPF</label>
+          <input type="text" id="dest-doc" value="12.345.678/0001-99" maxlength="18">
+        </div>
+        <div class="form-group">
+          <label>Inscrição Estadual (ou ISENTO)</label>
+          <input type="text" id="dest-ie" value="123.456.789">
+        </div>
+        <div class="form-group">
+          <label>Indicador IE</label>
+          <select id="dest-indIE">
+            <option value="1" selected>1 – Contribuinte ICMS</option>
+            <option value="2">2 – Contribuinte isento de IE</option>
+            <option value="9">9 – Não contribuinte</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Consumidor Final?</label>
+          <select id="dest-cf" onchange="recalcular()">
+            <option value="0" selected>0 – Normal (B2B)</option>
+            <option value="1">1 – Consumidor Final (B2C)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>UF Destinatário</label>
+          <select id="dest-uf" onchange="onUFChange('dest')"></select>
+        </div>
+        <div class="form-group">
+          <label>Município Destinatário</label>
+          <select id="dest-municipio"></select>
+        </div>
+        <div class="form-group span2">
+          <label>Endereço</label>
+          <input type="text" id="dest-end" value="Av. Presidente Café Filho, 200">
+        </div>
+        <div class="form-group">
+          <label>CEP</label>
+          <input type="text" id="dest-cep" value="59000-000" maxlength="9" oninput="maskCEP(this)">
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="text" id="dest-fone" value="(84) 3232-0000">
+        </div>
+      </div>
+      <!-- DIFAL -->
+      <div class="difal-section hidden" id="difal-section">
+        <h4>⚡ DIFAL – Diferencial de Alíquota (EC 87/2015)</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Alíquota Interestadual (%)</label>
+            <input type="number" id="difal-aliq-inter" value="12" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Alíquota Interna Destino (%)</label>
+            <input type="number" id="difal-aliq-dest" value="17" step="0.01" onchange="recalcular()">
+          </div>
+          <div class="form-group">
+            <label>FCP – Fundo Combate Pobreza (%)</label>
+            <input type="number" id="difal-fcp" value="2" step="0.01" onchange="recalcular()">
+          </div>
+          <div class="form-group">
+            <label>DIFAL Calculado (R$)</label>
+            <input type="text" id="difal-valor" readonly>
+          </div>
+        </div>
+        <p class="text-xs text-muted mt-10">DIFAL recolhido pelo emitente em vendas interestaduais para consumidor final não contribuinte do ICMS (EC 87/2015 + LC 190/2022).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. DADOS DA OPERAÇÃO -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon">🗂️</div>
+      <h3>3. Dados da Operação</h3>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Natureza da Operação</label>
+          <input type="text" id="nf-nat" value="Venda de Mercadoria">
+        </div>
+        <div class="form-group">
+          <label>CFOP</label>
+          <select id="nf-cfop" onchange="validarCFOP()">
+            <option value="">Selecione...</option>
+            <optgroup label="── Saídas Internas (5xxx) ──">
+              <option value="5102">5102 – Venda de mercadoria adquirida de terceiros</option>
+              <option value="5101">5101 – Venda produção do estabelecimento</option>
+              <option value="5405">5405 – Venda c/ Substituição Tributária</option>
+              <option value="5411">5411 – Dev. de compra p/ industrialização</option>
+              <option value="5910">5910 – Remessa de brinde ou presente</option>
+              <option value="5152">5152 – Transferência de mercadoria (interna)</option>
+              <option value="5201">5201 – Devolução de compra para industrialização</option>
+              <option value="5410">5410 – Devolução de compra p/ revenda (com ST)</option>
+              <option value="5915">5915 – Remessa p/ conserto ou reparo</option>
+              <option value="5949">5949 – Outra saída interna</option>
+            </optgroup>
+            <optgroup label="── Entradas Internas (1xxx) ──">
+              <option value="1102">1102 – Compra para comercialização (interna)</option>
+              <option value="1101">1101 – Compra para industrialização (interna)</option>
+              <option value="1202">1202 – Dev. de venda de produção do estab.</option>
+              <option value="1910">1910 – Entrada de bonificação/brinde</option>
+              <option value="1915">1915 – Entrada p/ conserto ou reparo</option>
+            </optgroup>
+            <optgroup label="── Saídas Interestaduais (6xxx) ──">
+              <option value="6102">6102 – Venda de mercadoria (interestadual)</option>
+              <option value="6101">6101 – Venda produção (interestadual)</option>
+              <option value="6405">6405 – Venda c/ ST (interestadual)</option>
+              <option value="6152">6152 – Transferência (interestadual)</option>
+              <option value="6910">6910 – Brinde/Bonificação interestadual</option>
+              <option value="6949">6949 – Outra saída interestadual</option>
+            </optgroup>
+            <optgroup label="── Entradas Interestaduais (2xxx) ──">
+              <option value="2102">2102 – Compra para comercialização (interestadual)</option>
+              <option value="2101">2101 – Compra para industrialização (interestadual)</option>
+            </optgroup>
+            <optgroup label="── Exportação (7xxx) ──">
+              <option value="7102">7102 – Venda para exportação</option>
+              <option value="7101">7101 – Venda de produção para exportação</option>
+            </optgroup>
+          </select>
+          <span class="hint" id="cfop-hint"></span>
+        </div>
+        <div class="form-group">
+          <label>Finalidade da NF</label>
+          <select id="nf-finalidade">
+            <option value="1" selected>1 – NF-e Normal</option>
+            <option value="2">2 – NF-e Complementar</option>
+            <option value="3">3 – NF-e de Ajuste</option>
+            <option value="4">4 – Devolução/Retorno</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tipo de Operação</label>
+          <select id="nf-tipo">
+            <option value="1" selected>1 – Saída</option>
+            <option value="0">0 – Entrada</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tipo de Pagamento</label>
+          <select id="nf-pagto">
+            <option value="01" selected>01 – Dinheiro</option>
+            <option value="02">02 – Cheque</option>
+            <option value="03">03 – Cartão de Crédito</option>
+            <option value="04">04 – Cartão de Débito</option>
+            <option value="05">05 – Crédito Loja</option>
+            <option value="15">15 – Boleto Bancário</option>
+            <option value="17">17 – PIX</option>
+            <option value="90">90 – Sem Pagamento</option>
+            <option value="99">99 – Outros</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data Emissão</label>
+          <input type="date" id="nf-data">
+        </div>
+        <div class="form-group">
+          <label>Número NF</label>
+          <input type="text" id="nf-numero" readonly style="font-family:'IBM Plex Mono',monospace;font-weight:700;">
+        </div>
+        <div class="form-group">
+          <label>Série</label>
+          <input type="text" id="nf-serie" value="001" maxlength="3">
+        </div>
+        <div class="form-group">
+          <label>Modalidade de Frete</label>
+          <select id="nf-frete">
+            <option value="0" selected>0 – Emitente (CIF)</option>
+            <option value="1">1 – Destinatário (FOB)</option>
+            <option value="2">2 – Terceiros</option>
+            <option value="9">9 – Sem Frete</option>
+          </select>
+        </div>
+        <div class="form-group span2">
+          <label>Informações Complementares</label>
+          <input type="text" id="nf-info" placeholder="Ex: Venda sujeita ao CSOSN 400 – Simples Nacional. Documento emitido por C.E.C.P. Cursos.">
+        </div>
+        <div class="form-group span2">
+          <label>Chave NF-e Referenciada (Devolução/Complemento)</label>
+          <input type="text" id="nf-ref" placeholder="Chave de 44 dígitos – preencher apenas em Devolução ou Complementar" maxlength="44" style="font-family:'IBM Plex Mono',monospace;font-size:11px;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. PRODUTOS -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon">📦</div>
+      <h3>4. Produtos / Serviços</h3>
+    </div>
+    <div class="card-body">
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:600;color:var(--navy);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">Catálogo Rápido – clique para adicionar:</div>
+        <div class="catalogo-grid" id="catalogo-grid"></div>
+      </div>
+      <hr class="separator">
+      <div id="alertas-produto"></div>
+      <div class="produtos-table-wrap">
+        <table class="produtos-table" id="produtos-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th style="min-width:160px">Descrição</th>
+              <th>NCM</th>
+              <th>CST/CSOSN</th>
+              <th>CFOP</th>
+              <th>Un</th>
+              <th>Qtd</th>
+              <th>Vl. Unit.</th>
+              <th>Desc.%</th>
+              <th>%ICMS</th>
+              <th>%IPI</th>
+              <th>%PIS</th>
+              <th>%COFINS</th>
+              <th>Vl. Total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-produtos"></tbody>
+        </table>
+      </div>
+      <div class="mt-10 flex gap-8">
+        <button class="btn btn-outline btn-sm" onclick="addProduto()">+ Adicionar Linha</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. TOTAIS -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon">💰</div>
+      <h3>5. Totais da Nota</h3>
+    </div>
+    <div class="card-body">
+      <div class="totals-strip">
+        <div class="total-item"><label>Vl. Produtos</label><span id="tot-prod">R$ 0,00</span></div>
+        <div class="total-item"><label>Desconto</label><span id="tot-desc">R$ 0,00</span></div>
+        <div class="total-item"><label>Frete</label><span id="tot-frete">R$ 0,00</span></div>
+        <div class="total-item"><label>ICMS</label><span id="tot-icms">R$ 0,00</span></div>
+        <div class="total-item"><label>IPI</label><span id="tot-ipi">R$ 0,00</span></div>
+        <div class="total-item"><label>PIS</label><span id="tot-pis">R$ 0,00</span></div>
+        <div class="total-item"><label>COFINS</label><span id="tot-cofins">R$ 0,00</span></div>
+        <div class="total-item"><label>DIFAL</label><span id="tot-difal">R$ 0,00</span></div>
+        <div class="total-item highlight"><label>TOTAL NF</label><span id="tot-nf">R$ 0,00</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. TRANSMISSÃO SEFAZ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon">📡</div>
+      <h3>6. Transmissão SEFAZ (Simulação)</h3>
+    </div>
+    <div class="card-body">
+      <div id="transmissao-alertas"></div>
+      <div class="timeline" id="timeline">
+        <div class="tl-step" id="tl-1">
+          <div><div class="tl-title">Assinatura Digital (XML)</div><div class="tl-desc">Assinar o XML com certificado digital A1/A3 do emitente – PKCS#1 RSA 2048</div></div>
+          <span class="tl-badge wait" id="tl-1-badge">Aguardando</span>
+        </div>
+        <div class="tl-step" id="tl-2">
+          <div><div class="tl-title">Validação de Schema</div><div class="tl-desc">Validar campos conforme NT 2019.001 – Layout NF-e versão 4.00</div></div>
+          <span class="tl-badge wait" id="tl-2-badge">Aguardando</span>
+        </div>
+        <div class="tl-step" id="tl-3">
+          <div><div class="tl-title">Envio ao Webservice SEFAZ</div><div class="tl-desc">POST NfeAutorizacao4 – Ambiente de Homologação (nfeHomologacao)</div></div>
+          <span class="tl-badge wait" id="tl-3-badge">Aguardando</span>
+        </div>
+        <div class="tl-step" id="tl-4">
+          <div><div class="tl-title">Retorno SEFAZ (Autorização)</div><div class="tl-desc">cStat / xMotivo – Protocolo de Autorização de Uso</div></div>
+          <span class="tl-badge wait" id="tl-4-badge">Aguardando</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DANFE -->
+  <div id="danfe-wrap">
+    <div class="danfe-header">
+      <h3>🖨️ DANFE – Documento Auxiliar da NF-e | C.E.C.P. Cursos</h3>
+      <div class="flex gap-8">
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,.3)" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,.3)" onclick="document.getElementById('danfe-wrap').style.display='none'">✕ Fechar</button>
+      </div>
+    </div>
+    <div class="danfe-body" id="danfe-body"></div>
+  </div>
+
+</div><!-- /sec-emitir -->
+
+<!-- ════════════ SECTION: HISTÓRICO ════════════ -->
+<div id="sec-historico" class="hidden">
+  <div class="page-header">
+    <div>
+      <div class="page-breadcrumb">NF-e / Registros</div>
+      <div class="page-title">Histórico de Notas</div>
+    </div>
+    <div class="page-actions">
+      <button class="btn btn-outline btn-sm" onclick="exportarHistoricoCSV()">⬇️ Exportar CSV</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-header-icon">📋</div><h3>Notas Emitidas nesta Sessão</h3></div>
+    <div class="card-body" id="historico-body">
+      <p class="text-sm text-muted">Nenhuma nota emitida nesta sessão.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SECTION: EVENTOS ════════════ -->
+<div id="sec-eventos" class="hidden">
+  <div class="page-header">
+    <div>
+      <div class="page-breadcrumb">NF-e / Pós-emissão</div>
+      <div class="page-title">Eventos – Cancelamento e CC-e</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-header-icon">📨</div><h3>Registrar Evento Pós-Emissão</h3></div>
+    <div class="card-body">
+      <div id="eventos-alertas"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nota Autorizada</label>
+          <select id="evt-nota-sel" onchange="selecionarNotaEvento()">
+            <option value="">— Selecione —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tipo de Evento</label>
+          <select id="evt-tipo" onchange="onEvtTipoChange()">
+            <option value="110111">110111 – Cancelamento de NF-e</option>
+            <option value="110110">110110 – Carta de Correção (CC-e)</option>
+          </select>
+        </div>
+      </div>
+      <div id="evt-cce-campos" class="mt-10 hidden">
+        <div class="form-group">
+          <label>Grupo do Campo Corrigido (CC-e)</label>
+          <select id="evt-cce-grupo">
+            <option value="">— Selecione —</option>
+            <option value="Dados do Emitente">Dados do Emitente</option>
+            <option value="Dados do Destinatário">Dados do Destinatário</option>
+            <option value="Endereço do Destinatário">Endereço do Destinatário</option>
+            <option value="Informações Complementares">Informações Complementares</option>
+            <option value="Dados de Transporte">Dados de Transporte</option>
+            <option value="Natureza da Operação">Natureza da Operação</option>
+          </select>
+        </div>
+        <div class="alert alert-warning mt-10" style="margin-bottom:0">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Atenção CC-e:</strong> Permitido corrigir endereço, natureza da operação e informações complementares. <strong>NÃO</strong> é permitido alterar: valores, quantidades, NCM, CFOP ou tributação. Máximo de 20 CC-e por NF-e.</div>
+        </div>
+      </div>
+      <div class="mt-10">
+        <div class="form-group">
+          <label>Justificativa / Texto da Correção (mín. 15 caracteres)</label>
+          <textarea id="evt-just" rows="3" style="width:100%;resize:vertical;" placeholder="Descreva o motivo do cancelamento ou a correção..."></textarea>
+          <span class="hint" id="evt-just-count">0 / 1000 caracteres</span>
+        </div>
+      </div>
+      <div class="mt-14 flex gap-8">
+        <button class="btn btn-warning" onclick="simularEvento()">⚡ Registrar Evento no SEFAZ</button>
+      </div>
+      <div class="mt-14" id="eventos-log"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SECTION: CONSULTA ════════════ -->
+<div id="sec-consulta" class="hidden">
+  <div class="page-header">
+    <div>
+      <div class="page-breadcrumb">NF-e / Consulta</div>
+      <div class="page-title">Consultar NF-e por Chave de Acesso</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-header-icon">🔍</div><h3>Simulador de Consulta SEFAZ (NfeConsultaProtocolo4)</h3></div>
+    <div class="card-body">
+      <div class="form-group">
+        <label>Chave de Acesso (44 dígitos)</label>
+        <input type="text" id="consulta-chave" maxlength="44" style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:1px;" placeholder="Informe os 44 dígitos da chave...">
+      </div>
+      <div class="mt-10 flex gap-8">
+        <button class="btn btn-primary" onclick="consultarNFe()">🔍 Consultar</button>
+        <button class="btn btn-outline btn-sm" onclick="preencherChaveAleatoria()">🎲 Usar última chave emitida</button>
+      </div>
+      <div class="mt-14" id="consulta-result"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SECTION: AJUDA ════════════ -->
+<div id="sec-ajuda" class="hidden">
+  <div class="page-header">
+    <div>
+      <div class="page-breadcrumb">NF-e / Referência</div>
+      <div class="page-title">Guia de Referência Fiscal</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-header-icon">🗂️</div><h3>CFOP – Código Fiscal de Operações e Prestações</h3></div>
+    <div class="card-body">
+      <table class="help-table">
+        <thead><tr><th>Código</th><th>Descrição</th><th>Tipo</th><th>Operação Padrão</th></tr></thead>
+        <tbody>
+          <tr><td class="code-mono">5102</td><td>Venda de mercadoria adquirida ou recebida de terceiros</td><td>Saída Interna</td><td>Venda</td></tr>
+          <tr><td class="code-mono">5101</td><td>Venda de produção do estabelecimento</td><td>Saída Interna</td><td>Venda</td></tr>
+          <tr><td class="code-mono">5910</td><td>Remessa em bonificação, doação ou brinde</td><td>Saída Interna</td><td>Brinde</td></tr>
+          <tr><td class="code-mono">5915</td><td>Remessa de mercadoria ou bem para conserto ou reparo</td><td>Saída Interna</td><td>Conserto</td></tr>
+          <tr><td class="code-mono">5152</td><td>Transferência de mercadoria adquirida de terceiros (interna)</td><td>Saída Interna</td><td>Transferência</td></tr>
+          <tr><td class="code-mono">5411</td><td>Devolução de compra para comercialização em operação com ST</td><td>Saída Interna</td><td>Devolução</td></tr>
+          <tr><td class="code-mono">6102</td><td>Venda de mercadoria adquirida ou recebida de terceiros (interestadual)</td><td>Saída Interestadual</td><td>Venda</td></tr>
+          <tr><td class="code-mono">6152</td><td>Transferência de mercadoria adquirida de terceiros (interestadual)</td><td>Saída Interestadual</td><td>Transferência</td></tr>
+          <tr><td class="code-mono">1102</td><td>Compra para comercialização</td><td>Entrada Interna</td><td>Compra</td></tr>
+          <tr><td class="code-mono">2102</td><td>Compra para comercialização (interestadual)</td><td>Entrada Interestadual</td><td>Compra</td></tr>
+          <tr><td class="code-mono">1910</td><td>Entrada de bonificação, doação ou brinde</td><td>Entrada Interna</td><td>Brinde</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-header-icon">📊</div><h3>CST / CSOSN – Situação Tributária do ICMS</h3></div>
+    <div class="card-body">
+      <div class="section-title">Regime Normal (CST)</div>
+      <table class="help-table">
+        <thead><tr><th>CST</th><th>Descrição</th><th>Alíquota ICMS Típica</th></tr></thead>
+        <tbody>
+          <tr><td class="code-mono">00</td><td>Tributada integralmente</td><td>12% (inter.) / 17–18% (interna)</td></tr>
+          <tr><td class="code-mono">10</td><td>Tributada com cobrança de ICMS por Substituição Tributária</td><td>12% / 17%</td></tr>
+          <tr><td class="code-mono">20</td><td>Com redução de base de cálculo</td><td>Variável</td></tr>
+          <tr><td class="code-mono">30</td><td>Isenta ou não tributada e com cobrança de ICMS por ST</td><td>0%</td></tr>
+          <tr><td class="code-mono">40</td><td>Isenta</td><td>0%</td></tr>
+          <tr><td class="code-mono">41</td><td>Não tributada</td><td>0%</td></tr>
+          <tr><td class="code-mono">50</td><td>Suspensão</td><td>0%</td></tr>
+          <tr><td class="code-mono">60</td><td>ICMS cobrado anteriormente por ST</td><td>0%</td></tr>
+          <tr><td class="code-mono">70</td><td>Com redução de BC e cobrança de ICMS por ST</td><td>Variável</td></tr>
+          <tr><td class="code-mono">90</td><td>Outros</td><td>Variável</td></tr>
+        </tbody>
+      </table>
+      <div class="section-title">Simples Nacional (CSOSN)</div>
+      <table class="help-table">
+        <thead><tr><th>CSOSN</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td class="code-mono">101</td><td>Tributada pelo Simples Nacional c/ permissão de crédito</td></tr>
+          <tr><td class="code-mono">102</td><td>Tributada pelo Simples Nacional sem permissão de crédito</td></tr>
+          <tr><td class="code-mono">400</td><td>Não tributada pelo Simples Nacional</td></tr>
+          <tr><td class="code-mono">500</td><td>ICMS cobrado anteriormente por ST (Simples Nacional)</td></tr>
+          <tr><td class="code-mono">900</td><td>Outros (Simples Nacional)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-header-icon">⚠️</div><h3>Principais Rejeições SEFAZ</h3></div>
+    <div class="card-body">
+      <table class="help-table">
+        <thead><tr><th>cStat</th><th>xMotivo (Motivo)</th><th>Como Corrigir</th></tr></thead>
+        <tbody>
+          <tr><td class="code-mono">100</td><td>Autorizado o uso da NF-e</td><td>✅ Sucesso</td></tr>
+          <tr><td class="code-mono">704</td><td>Rejeição: NF-e com CFOP incompatível com a operação</td><td>Ajustar CFOP (5xxx interno / 6xxx interestadual)</td></tr>
+          <tr><td class="code-mono">562</td><td>Rejeição: NCM inválido</td><td>Verificar 8 dígitos do NCM na TEC</td></tr>
+          <tr><td class="code-mono">302</td><td>Rejeição: CNPJ do emitente inválido</td><td>Verificar dígitos verificadores do CNPJ</td></tr>
+          <tr><td class="code-mono">539</td><td>Rejeição: Alíquota de ICMS inválida para a UF</td><td>Conferir tabela de alíquotas interestaduais</td></tr>
+          <tr><td class="code-mono">228</td><td>Rejeição: Data de emissão muito antiga</td><td>NF-e deve ser transmitida no mesmo dia ou D+1</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-header-icon">📐</div><h3>Alíquotas Interestaduais de ICMS</h3></div>
+    <div class="card-body">
+      <table class="help-table">
+        <thead><tr><th>Origem / Destino</th><th>Alíquota Interestadual</th><th>Observação</th></tr></thead>
+        <tbody>
+          <tr><td>Sul e Sudeste → Norte, Nordeste, CO, ES</td><td class="code-mono">7%</td><td>Operações entre estados de desenvolvimento desigual</td></tr>
+          <tr><td>Sul e Sudeste → Sul e Sudeste</td><td class="code-mono">12%</td><td>Operações entre estados do mesmo porte</td></tr>
+          <tr><td>Norte, Nordeste, CO, ES → qualquer UF</td><td class="code-mono">12%</td><td>Estados menos desenvolvidos saem a 12%</td></tr>
+          <tr><td>Qualquer UF → DF</td><td class="code-mono">12%</td><td>Distrito Federal recebe a 12%</td></tr>
+          <tr><td>Importações (produtos importados)</td><td class="code-mono">4%</td><td>Resolução SF 13/2012</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app-body -->
+
+<script>
+// ═══════════════════════════════════════════════
+//  LOGO BASE64 EMBED
+// ═══════════════════════════════════════════════
+(function() {
+  const img = document.getElementById('logo-img');
+  img.src = 'data:image/png;base64,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';
+})();
+
+// ═══════════════════════════════════════════════
+//  CATÁLOGO DE PRODUTOS
+// ═══════════════════════════════════════════════
+const CATALOGO = [
+  { icon:'💻', nome:'Notebook Dell Inspiron 15',       ncm:'84713019', un:'UN', vunit:3499.90, picms:12, pipi:0,  ppis:0.65, pcofins:3, cst:'00', cfop:'5102' },
+  { icon:'📱', nome:'Smartphone Samsung Galaxy A54',   ncm:'85171231', un:'UN', vunit:1799.00, picms:12, pipi:0,  ppis:0.65, pcofins:3, cst:'00', cfop:'5102' },
+  { icon:'🖨️', nome:'Impressora HP LaserJet M140w',   ncm:'84433200', un:'UN', vunit:1290.00, picms:12, pipi:5,  ppis:0.65, pcofins:3, cst:'00', cfop:'5102' },
+  { icon:'📺', nome:'TV LED 50" 4K LG SmartTV',        ncm:'85282110', un:'UN', vunit:2349.00, picms:17, pipi:10, ppis:0.65, pcofins:3, cst:'00', cfop:'5102' },
+  { icon:'❄️', nome:'Geladeira Frost Free 450L Brastemp', ncm:'84181000', un:'UN', vunit:3599.00, picms:17, pipi:4, ppis:0.65, pcofins:3, cst:'10', cfop:'5405' },
+  { icon:'🫙', nome:'Feijão Carioca 1kg',              ncm:'07133310', un:'KG', vunit:8.90,   picms:0,  pipi:0,  ppis:0,    pcofins:0, cst:'40', cfop:'5102' },
+  { icon:'🥛', nome:'Leite Integral UHT 1L',           ncm:'04012000', un:'UN', vunit:4.99,   picms:0,  pipi:0,  ppis:0,    pcofins:0, cst:'40', cfop:'5102' },
+  { icon:'💊', nome:'Paracetamol 750mg 20 comp.',       ncm:'30049099', un:'CX', vunit:12.90,  picms:0,  pipi:0,  ppis:0,    pcofins:0, cst:'40', cfop:'5102' },
+  { icon:'👕', nome:'Camiseta Algodão M – Branca',     ncm:'61091000', un:'UN', vunit:39.90,  picms:12, pipi:0,  ppis:0.65, pcofins:3, cst:'00', cfop:'5102' },
+  { icon:'🪑', nome:'Cadeira Escritório Giratória',    ncm:'94013000', un:'UN', vunit:599.00,  picms:12, pipi:0,  ppis:0.65, pcofins:3, cst:'00', cfop:'5102' },
+  { icon:'🖊️', nome:'Caneta Esferográfica Azul 50un',  ncm:'96081000', un:'CX', vunit:45.00,  picms:12, pipi:0,  ppis:0.65, pcofins:3, cst:'00', cfop:'5102' },
+  { icon:'📄', nome:'Resma Papel A4 75g 500fls',       ncm:'48025590', un:'RS', vunit:38.90,  picms:12, pipi:0,  ppis:0.65, pcofins:3, cst:'00', cfop:'5102' },
+  { icon:'🔧', nome:'Chave de Fenda 6" Tramontina',    ncm:'82051000', un:'UN', vunit:22.50,  picms:12, pipi:0,  ppis:0.65, pcofins:3, cst:'00', cfop:'5102' },
+  { icon:'📦', nome:'Caixa Papelão 40x30x30cm',        ncm:'48191000', un:'UN', vunit:5.80,   picms:12, pipi:0,  ppis:0.65, pcofins:3, cst:'00', cfop:'5102' },
+  { icon:'🛢️', nome:'Óleo Lubrificante 1L 5W30',       ncm:'27101259', un:'UN', vunit:45.00,  picms:17, pipi:5,  ppis:0.65, pcofins:3, cst:'10', cfop:'5405' },
+];
+
+const MUNICIPIOS = {
+  AC:['Rio Branco','Cruzeiro do Sul','Sena Madureira'],
+  AL:['Maceió','Arapiraca','Palmeira dos Índios'],
+  AM:['Manaus','Parintins','Itacoatiara'],
+  AP:['Macapá','Santana'],
+  BA:['Salvador','Feira de Santana','Vitória da Conquista','Camaçari'],
+  CE:['Fortaleza','Caucaia','Juazeiro do Norte','Sobral'],
+  DF:['Brasília','Ceilândia','Taguatinga'],
+  ES:['Vitória','Vila Velha','Cariacica','Serra'],
+  GO:['Goiânia','Aparecida de Goiânia','Anápolis'],
+  MA:['São Luís','Imperatriz','Caxias'],
+  MG:['Belo Horizonte','Uberlândia','Contagem','Juiz de Fora'],
+  MS:['Campo Grande','Dourados','Três Lagoas'],
+  MT:['Cuiabá','Várzea Grande','Rondonópolis'],
+  PA:['Belém','Ananindeua','Santarém'],
+  PB:['João Pessoa','Campina Grande','Patos'],
+  PE:['Recife','Caruaru','Petrolina','Olinda'],
+  PI:['Teresina','Parnaíba','Picos'],
+  PR:['Curitiba','Londrina','Maringá','Ponta Grossa'],
+  RJ:['Rio de Janeiro','São Gonçalo','Duque de Caxias','Niterói'],
+  RN:['Natal','Mossoró','Parnamirim','São Gonçalo do Amarante','Macaíba','Caicó'],
+  RO:['Porto Velho','Ji-Paraná'],
+  RR:['Boa Vista'],
+  RS:['Porto Alegre','Caxias do Sul','Pelotas','Santa Maria'],
+  SC:['Florianópolis','Joinville','Blumenau'],
+  SE:['Aracaju','Nossa Senhora do Socorro'],
+  SP:['São Paulo','Guarulhos','Campinas','São Bernardo do Campo','Ribeirão Preto'],
+  TO:['Palmas','Araguaína']
+};
+const UFS = Object.keys(MUNICIPIOS).sort();
+
+// ─── OPERAÇÕES ───
+const OPERACOES = {
+  venda:        { nat:'Venda de Mercadoria', cfop:'5102', tipo:'1', finalidade:'1', pipi:0, info:'Venda de mercadoria adquirida de terceiros.' },
+  compra:       { nat:'Compra para Comercialização', cfop:'1102', tipo:'0', finalidade:'1', pipi:0, info:'Compra de mercadoria para comercialização.' },
+  devolucao:    { nat:'Devolução de Venda', cfop:'5411', tipo:'1', finalidade:'4', pipi:0, info:'Devolução de mercadoria conforme NF-e de origem.' },
+  brinde:       { nat:'Remessa de Brinde', cfop:'5910', tipo:'1', finalidade:'1', pipi:0, info:'Remessa em bonificação – sem ônus para o destinatário. Artigo 456-A RICMS.' },
+  bonificacao:  { nat:'Bonificação de Mercadoria', cfop:'5910', tipo:'1', finalidade:'1', pipi:0, info:'Remessa em bonificação conforme política comercial.' },
+  conserto:     { nat:'Remessa para Conserto/Reparo', cfop:'5915', tipo:'1', finalidade:'1', pipi:0, info:'Remessa de bem para conserto. Retorno previsto em 180 dias.' },
+  transferencia:{ nat:'Transferência de Mercadoria', cfop:'5152', tipo:'1', finalidade:'1', pipi:0, info:'Transferência entre estabelecimentos do mesmo titular.' },
+};
+
+let estado = { produtos:[], proximoNumero:100001, notasEmitidas:[], ultimaNota:null, transmitindo:false, opAtual:'venda' };
+let pId = 0;
+
+// ─── INIT ───
+(function init() {
+  preencherUFs();
+  document.getElementById('nf-data').valueAsDate = new Date();
+  document.getElementById('nf-numero').value = String(estado.proximoNumero).padStart(9,'0');
+  renderCatalogo();
+  recalcular();
+  document.getElementById('evt-just').addEventListener('input', function() {
+    document.getElementById('evt-just-count').textContent = this.value.length + ' / 1000 caracteres';
+  });
+})();
+
+function preencherUFs() {
+  ['emit-uf','dest-uf'].forEach(id => {
+    const sel = document.getElementById(id);
+    UFS.forEach(uf => { const o = document.createElement('option'); o.value=uf; o.textContent=uf; sel.appendChild(o); });
+  });
+  document.getElementById('emit-uf').value = 'RN';
+  document.getElementById('dest-uf').value = 'RN';
+  preencherMunicipios('emit','RN');
+  preencherMunicipios('dest','RN');
+  document.getElementById('emit-municipio').value = 'Mossoró';
+  document.getElementById('dest-municipio').value = 'Natal';
+}
+
+function preencherMunicipios(p, uf) {
+  const sel = document.getElementById(p+'-municipio');
+  sel.innerHTML = (MUNICIPIOS[uf]||[]).map(c=>`<option>${c}</option>`).join('');
+}
+
+function onUFChange(p) { preencherMunicipios(p, document.getElementById(p+'-uf').value); recalcular(); validarCFOP(); }
+
+// ─── SETOPERACAO ───
+function setOperacao(op) {
+  estado.opAtual = op;
+  document.querySelectorAll('.op-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const cfg = OPERACOES[op];
+  if (!cfg) return;
+  document.getElementById('nf-nat').value = cfg.nat;
+  document.getElementById('nf-tipo').value = cfg.tipo;
+  document.getElementById('nf-finalidade').value = cfg.finalidade;
+  document.getElementById('nf-info').value = cfg.info;
+  // Definir CFOP sugerido
+  const cfopSel = document.getElementById('nf-cfop');
+  const ufEmit = document.getElementById('emit-uf').value;
+  const ufDest = document.getElementById('dest-uf').value;
+  const isInter = ufEmit !== ufDest;
+  let cfop = cfg.cfop;
+  // Ajuste automático para interestadual em vendas e compras
+  if (isInter) {
+    if (cfop==='5102') cfop='6102';
+    if (cfop==='5101') cfop='6101';
+    if (cfop==='5152') cfop='6152';
+    if (cfop==='1102') cfop='2102';
+    if (cfop==='1101') cfop='2101';
+    if (cfop==='5910') cfop='6910';
+  }
+  cfopSel.value = cfop;
+  validarCFOP();
+}
+
+// ─── SECTIONS ───
+function showSection(id) {
+  ['sec-emitir','sec-historico','sec-eventos','sec-ajuda','sec-consulta'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.getAttribute('onclick') && n.getAttribute('onclick').includes(id));
+  });
+  if (id==='sec-historico') renderHistorico();
+  if (id==='sec-eventos') atualizarSelectEvento();
+}
+
+// ─── CATALOG ───
+function renderCatalogo() {
+  document.getElementById('catalogo-grid').innerHTML = CATALOGO.map((p,i)=>`
+    <div class="cat-item" onclick="addProdutoCatalogo(${i})">
+      <span class="cat-icon">${p.icon}</span>
+      <div class="cat-info">
+        <div class="cat-nome">${p.nome}</div>
+        <div class="cat-preco">R$ ${fmtN(p.vunit.toFixed(2))}</div>
+        <div class="cat-ncm">NCM ${p.ncm}</div>
+      </div>
+    </div>`).join('');
+}
+
+function addProdutoCatalogo(idx) {
+  const p = CATALOGO[idx];
+  const cfopAtual = document.getElementById('nf-cfop').value;
+  addProduto({ ...p, cfop: cfopAtual || p.cfop });
+}
+
+// ─── PRODUCTS ───
+function addProduto(dados) {
+  const id = ++pId;
+  const cfop = document.getElementById('nf-cfop').value || dados?.cfop || '5102';
+  estado.produtos.push({
+    id, desc:dados?.nome||dados?.desc||'', ncm:dados?.ncm||'', cst:dados?.cst||'00',
+    cfop:dados?.cfop||cfop, un:dados?.un||'UN', qtd:dados?.qtd||1,
+    vunit:dados?.vunit||0, desc_pct:0,
+    picms:dados?.picms??12, pipi:dados?.pipi??0, ppis:dados?.ppis??0.65, pcofins:dados?.pcofins??3
+  });
+  renderProdutos();
+}
+
+function removeProduto(id) { estado.produtos = estado.produtos.filter(p=>p.id!==id); renderProdutos(); recalcular(); }
+
+function renderProdutos() {
+  const tbody = document.getElementById('tbody-produtos');
+  tbody.innerHTML = '';
+  estado.produtos.forEach((p, idx) => {
+    const vt = (p.qtd * p.vunit * (1 - p.desc_pct/100)).toFixed(2);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${idx+1}</td>
+      <td><input value="${p.desc}" onchange="updateProd(${p.id},'desc',this.value)" style="min-width:150px;width:200px"></td>
+      <td><input value="${p.ncm}" onchange="updateProd(${p.id},'ncm',this.value)" maxlength="8" style="width:76px" placeholder="00000000"></td>
+      <td><select onchange="updateProd(${p.id},'cst',this.value)" style="font-size:12px;padding:3px 5px">
+        ${['00','10','20','30','40','41','50','60','70','90','101','102','400','500','900'].map(v=>`<option ${p.cst===v?'selected':''} value="${v}">${v}</option>`).join('')}
+      </select></td>
+      <td><input value="${p.cfop}" onchange="updateProd(${p.id},'cfop',this.value)" style="width:52px"></td>
+      <td><input value="${p.un}" onchange="updateProd(${p.id},'un',this.value)" style="width:40px"></td>
+      <td><input type="number" value="${p.qtd}" min="0.001" step="0.001" onchange="updateProd(${p.id},'qtd',+this.value)" style="width:56px"></td>
+      <td><input type="number" value="${p.vunit}" min="0" step="0.01" onchange="updateProd(${p.id},'vunit',+this.value)" style="width:76px"></td>
+      <td><input type="number" value="${p.desc_pct}" min="0" max="100" step="0.01" onchange="updateProd(${p.id},'desc_pct',+this.value)" style="width:46px"></td>
+      <td><input type="number" value="${p.picms}" min="0" step="0.01" onchange="updateProd(${p.id},'picms',+this.value)" style="width:46px"></td>
+      <td><input type="number" value="${p.pipi}" min="0" step="0.01" onchange="updateProd(${p.id},'pipi',+this.value)" style="width:46px"></td>
+      <td><input type="number" value="${p.ppis}" min="0" step="0.01" onchange="updateProd(${p.id},'ppis',+this.value)" style="width:46px"></td>
+      <td><input type="number" value="${p.pcofins}" min="0" step="0.01" onchange="updateProd(${p.id},'pcofins',+this.value)" style="width:46px"></td>
+      <td><strong style="white-space:nowrap;font-family:'IBM Plex Mono',monospace">R$ ${fmtN(vt)}</strong></td>
+      <td><button class="btn-del" onclick="removeProduto(${p.id})" title="Remover item">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+  recalcular();
+}
+
+function updateProd(id, field, val) { const p = estado.produtos.find(x=>x.id===id); if(p){p[field]=val;recalcular();} }
+
+// ─── CÁLCULOS ───
+function recalcular() {
+  let totProd=0,totDesc=0,totIcms=0,totIpi=0,totPis=0,totCofins=0;
+  estado.produtos.forEach(p => {
+    const vb=p.qtd*p.vunit, vd=vb*p.desc_pct/100, vl=vb-vd;
+    totProd+=vb; totDesc+=vd;
+    totIcms+=vl*p.picms/100; totIpi+=vl*p.pipi/100;
+    totPis+=vl*p.ppis/100; totCofins+=vl*p.pcofins/100;
+  });
+  const totLiq = totProd - totDesc;
+  const ufEmit = document.getElementById('emit-uf').value;
+  const ufDest = document.getElementById('dest-uf').value;
+  const cf = document.getElementById('dest-cf').value;
+  const isInter = ufEmit !== ufDest;
+  const showDifal = isInter && cf==='1';
+  document.getElementById('difal-section').classList.toggle('hidden', !showDifal);
+  let totDifal=0;
+  if(showDifal){
+    const aliqInter=+document.getElementById('difal-aliq-inter').value;
+    const aliqDest=+document.getElementById('difal-aliq-dest').value;
+    const fcp=+document.getElementById('difal-fcp').value;
+    totDifal = totLiq*(aliqDest-aliqInter)/100 + totLiq*fcp/100;
+    document.getElementById('difal-valor').value = 'R$ '+fmtN(totDifal.toFixed(2));
+  }
+  const totNF = totLiq + totIpi + totDifal;
+  document.getElementById('tot-prod').textContent   = 'R$ '+fmtN(totProd.toFixed(2));
+  document.getElementById('tot-desc').textContent   = 'R$ '+fmtN(totDesc.toFixed(2));
+  document.getElementById('tot-frete').textContent  = 'R$ 0,00';
+  document.getElementById('tot-icms').textContent   = 'R$ '+fmtN(totIcms.toFixed(2));
+  document.getElementById('tot-ipi').textContent    = 'R$ '+fmtN(totIpi.toFixed(2));
+  document.getElementById('tot-pis').textContent    = 'R$ '+fmtN(totPis.toFixed(2));
+  document.getElementById('tot-cofins').textContent = 'R$ '+fmtN(totCofins.toFixed(2));
+  document.getElementById('tot-difal').textContent  = 'R$ '+fmtN(totDifal.toFixed(2));
+  document.getElementById('tot-nf').textContent     = 'R$ '+fmtN(totNF.toFixed(2));
+  validarNCMs();
+  return {totProd,totDesc,totLiq,totIcms,totIpi,totPis,totCofins,totDifal,totNF};
+}
+
+function validarNCMs() {
+  const alertDiv = document.getElementById('alertas-produto');
+  const msgs = estado.produtos
+    .filter(p=>p.ncm && p.ncm.replace(/\D/g,'').length!==8)
+    .map(p=>`Item ${estado.produtos.indexOf(p)+1} (${p.desc||'sem nome'}): NCM "${p.ncm}" inválido – deve ter exatamente 8 dígitos (TEC).`);
+  alertDiv.innerHTML = msgs.map(m=>`<div class="alert alert-warning"><span class="alert-icon">⚠️</span><div>${m}</div></div>`).join('');
+}
+
+function validarCFOP() {
+  const cfop = document.getElementById('nf-cfop').value;
+  const ufEmit = document.getElementById('emit-uf').value;
+  const ufDest = document.getElementById('dest-uf').value;
+  const hint = document.getElementById('cfop-hint');
+  if(!cfop){hint.textContent='';return;}
+  const d1=cfop[0], isInter=ufEmit!==ufDest;
+  if(d1==='5'&&isInter) hint.innerHTML='<span style="color:var(--red)">⚠ CFOP 5xxx é Interno, mas UFs são diferentes → Rejeição 704!</span>';
+  else if(d1==='6'&&!isInter) hint.innerHTML='<span style="color:var(--red)">⚠ CFOP 6xxx é Interestadual, mas UFs são iguais → Rejeição 704!</span>';
+  else if(d1==='1'&&isInter) hint.innerHTML='<span style="color:var(--orange)">⚠ CFOP 1xxx é Entrada Interna, mas UFs são diferentes.</span>';
+  else if(d1==='2'&&!isInter) hint.innerHTML='<span style="color:var(--orange)">⚠ CFOP 2xxx é Entrada Interestadual, mas UFs são iguais.</span>';
+  else hint.innerHTML='<span style="color:var(--green)">✓ CFOP compatível com a operação.</span>';
+}
+
+function onRegimeChange() {
+  const regime = document.getElementById('emit-regime').value;
+  if(regime==='1'||regime==='2'){
+    estado.produtos.forEach(p=>{ if(p.cst==='00') p.cst='400'; });
+    renderProdutos();
+  } else {
+    estado.produtos.forEach(p=>{ if(p.cst==='400') p.cst='00'; });
+    renderProdutos();
+  }
+}
+
+// ─── VALIDAÇÃO TRANSMISSÃO ───
+function validarFormulario() {
+  const erros=[];
+  if(!document.getElementById('emit-cnpj').value.replace(/\D/g,'')) erros.push('CNPJ do Emitente é obrigatório.');
+  if(estado.produtos.length===0) erros.push('Adicione pelo menos um produto à nota.');
+  if(!document.getElementById('nf-cfop').value) erros.push('Selecione o CFOP da operação.');
+  estado.produtos.forEach((p,i)=>{
+    if(!p.ncm||p.ncm.replace(/\D/g,'').length!==8) erros.push(`Item ${i+1} (${p.desc||'sem nome'}): NCM inválido (deve ter 8 dígitos).`);
+    if(!p.desc) erros.push(`Item ${i+1}: Descrição obrigatória.`);
+    if(p.qtd<=0) erros.push(`Item ${i+1}: Quantidade deve ser maior que zero.`);
+    if(p.vunit<0) erros.push(`Item ${i+1}: Valor unitário inválido.`);
+  });
+  const cfop=document.getElementById('nf-cfop').value;
+  const ufEmit=document.getElementById('emit-uf').value;
+  const ufDest=document.getElementById('dest-uf').value;
+  if(cfop){
+    const d1=cfop[0], isInter=ufEmit!==ufDest;
+    if(d1==='5'&&isInter) erros.push('Rejeição 704: CFOP 5xxx em operação interestadual. Use 6xxx.');
+    if(d1==='6'&&!isInter) erros.push('Rejeição 704: CFOP 6xxx em operação interna. Use 5xxx.');
+  }
+  return erros;
+}
+
+function setTlStep(n, status, txt) {
+  const el = document.getElementById(`tl-${n}`);
+  el.classList.remove('done','active','error');
+  if(status) el.classList.add(status);
+  const badge = document.getElementById(`tl-${n}-badge`);
+  badge.className='tl-badge';
+  if(status==='done')   badge.classList.add('ok');
+  else if(status==='active') badge.classList.add('running');
+  else if(status==='error')  badge.classList.add('fail');
+  else badge.classList.add('wait');
+  badge.textContent=txt;
+}
+
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+// ─── TRANSMISSÃO ───
+async function iniciarTransmissao() {
+  if(estado.transmitindo) return;
+  const alertDiv=document.getElementById('transmissao-alertas');
+  alertDiv.innerHTML='';
+  const erros=validarFormulario();
+  if(erros.length>0){
+    alertDiv.innerHTML=erros.map(e=>`<div class="alert alert-danger"><span class="alert-icon">❌</span><div>${e}</div></div>`).join('');
+    return;
+  }
+  estado.transmitindo=true;
+  document.getElementById('btn-transmitir').disabled=true;
+  [1,2,3,4].forEach(n=>setTlStep(n,'','Aguardando'));
+  setTlStep(1,'active','Assinando...');  await sleep(800);  setTlStep(1,'done','✓ Assinado RSA-2048');
+  setTlStep(2,'active','Validando...');  await sleep(1000); setTlStep(2,'done','✓ Schema v4.00 OK');
+  setTlStep(3,'active','Enviando...');   await sleep(1300); setTlStep(3,'done','✓ Recebido SEFAZ');
+  setTlStep(4,'active','Aguardando...'); await sleep(1200);
+
+  // 5% chance de rejeição simulada para fins didáticos
+  const rejeitado = Math.random() < 0.05;
+  if(rejeitado) {
+    setTlStep(4,'error','✗ Rejeitado');
+    alertDiv.innerHTML=`<div class="alert alert-danger"><span class="alert-icon">❌</span><div>
+      <strong>NF-e Rejeitada (Simulação)!</strong><br>
+      cStat: 562 – Rejeição: NCM inválido<br>
+      <em>Dica pedagógica: Na prática, verifique todos os NCMs com 8 dígitos exatos conforme a TEC.</em>
+    </div></div>`;
+    estado.transmitindo=false;
+    document.getElementById('btn-transmitir').disabled=false;
+    return;
+  }
+
+  const chave=gerarChave(), protocolo='3'+Date.now().toString().slice(0,12);
+  const numero=document.getElementById('nf-numero').value;
+  setTlStep(4,'done','✓ cStat 100 – Autorizada');
+
+  alertDiv.innerHTML=`<div class="alert alert-success"><span class="alert-icon">✅</span><div>
+    <strong>NF-e Autorizada pelo SEFAZ!</strong><br>
+    cStat: 100 – Autorizado o uso da NF-e<br>
+    Protocolo de Autorização: <strong>${protocolo}</strong><br>
+    Data/Hora Autorização: <strong>${new Date().toLocaleString('pt-BR')}</strong>
+    <div class="chave-box mt-10">🔑 ${chave}</div>
+  </div></div>`;
+
+  const tots=recalcular();
+  const nota={
+    chave, protocolo, numero, modelo:55,
+    emitente:document.getElementById('emit-nome').value,
+    cnpj:document.getElementById('emit-cnpj').value,
+    ie:document.getElementById('emit-ie').value,
+    ufEmit:document.getElementById('emit-uf').value,
+    municipioEmit:document.getElementById('emit-municipio').value,
+    endEmit:document.getElementById('emit-end').value,
+    destinatario:document.getElementById('dest-nome').value,
+    cnpjDest:document.getElementById('dest-doc').value,
+    ufDest:document.getElementById('dest-uf').value,
+    municipioDest:document.getElementById('dest-municipio').value,
+    cfop:document.getElementById('nf-cfop').value,
+    natOp:document.getElementById('nf-nat').value,
+    serie:document.getElementById('nf-serie').value,
+    data:document.getElementById('nf-data').value,
+    pagto:document.querySelector('#nf-pagto option:checked').text,
+    infoCompl:document.getElementById('nf-info').value,
+    total:tots.totNF, totProd:tots.totProd, totDesc:tots.totDesc,
+    totIcms:tots.totIcms, totIpi:tots.totIpi, totPis:tots.totPis, totCofins:tots.totCofins,
+    produtos:JSON.parse(JSON.stringify(estado.produtos)),
+    status:'autorizada', eventos:[], operacao: estado.opAtual
+  };
+  estado.notasEmitidas.push(nota);
+  estado.ultimaNota=nota;
+  estado.proximoNumero++;
+  document.getElementById('nf-numero').value=String(estado.proximoNumero).padStart(9,'0');
+  document.getElementById('btn-ver-danfe').classList.remove('hidden');
+  document.getElementById('btn-nova').classList.remove('hidden');
+  document.getElementById('btn-transmitir').disabled=false;
+  estado.transmitindo=false;
+  document.getElementById('nav-hist-count').textContent=estado.notasEmitidas.length;
+}
+
+// ─── GERAR CHAVE 44 DÍGITOS ───
+function gerarChave() {
+  const uf=document.getElementById('emit-uf').value;
+  const ufCod={AC:'12',AL:'27',AM:'13',AP:'16',BA:'29',CE:'23',DF:'53',ES:'32',GO:'52',MA:'21',MG:'31',MS:'50',MT:'51',PA:'15',PB:'25',PE:'26',PI:'22',PR:'41',RJ:'33',RN:'24',RO:'11',RR:'14',RS:'43',SC:'42',SE:'28',SP:'35',TO:'17'};
+  const c=ufCod[uf]||'24';
+  const d=new Date();
+  let chave=c+String(d.getFullYear()).slice(2)+String(d.getMonth()+1).padStart(2,'0');
+  chave+=(document.getElementById('emit-cnpj').value||'').replace(/\D/g,'').padEnd(14,'0');
+  chave+='55'; // modelo
+  chave+=String(document.getElementById('nf-serie').value).padStart(3,'0');
+  chave+=String(estado.proximoNumero).padStart(9,'0')+'1';
+  while(chave.length<43) chave+=String(Math.floor(Math.random()*10));
+  return chave.slice(0,43)+String(Math.floor(Math.random()*9)+1);
+}
+
+// ─── DANFE ───
+function verDanfe() {
+  if(!estado.ultimaNota) return;
+  const nota=estado.ultimaNota;
+  const wrap=document.getElementById('danfe-wrap');
+  const body=document.getElementById('danfe-body');
+  const totProd=nota.produtos.reduce((s,p)=>s+p.qtd*p.vunit*(1-(p.desc_pct||0)/100),0);
+  body.innerHTML=`<div class="danfe-doc">
+    <!-- CABEÇALHO DANFE -->
+    <div class="danfe-row" style="background:var(--navy-pale);align-items:stretch">
+      <div class="danfe-cell" style="flex:3;display:flex;flex-direction:column;justify-content:center;gap:2px">
+        <label>IDENTIFICAÇÃO DO EMITENTE</label>
+        <span style="font-size:12px;font-family:'IBM Plex Sans',sans-serif">${nota.emitente}</span>
+        <span style="font-size:9px;font-weight:400;font-family:'IBM Plex Sans',sans-serif">CNPJ: ${nota.cnpj} | IE: ${nota.ie}</span>
+        <span style="font-size:9px;font-weight:400;font-family:'IBM Plex Sans',sans-serif">${nota.endEmit} – ${nota.municipioEmit}/${nota.ufEmit}</span>
+      </div>
+      <div class="danfe-cell" style="flex:1.3;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px">
+        <span style="font-size:9px;color:#555;font-family:'IBM Plex Sans',sans-serif">DOCUMENTO AUXILIAR DA</span>
+        <span style="font-size:14px;font-weight:900;font-family:'IBM Plex Sans',sans-serif">NF-e</span>
+        <span style="font-size:8px;font-family:'IBM Plex Sans',sans-serif">Modelo 55</span>
+        <hr style="border:none;border-top:1px solid #aaa;margin:4px 0;width:80%">
+        <label>TIPO</label>
+        <span style="font-size:11px">${nota.cfop.startsWith('1')||nota.cfop.startsWith('2')?'0 – ENTRADA':'1 – SAÍDA'}</span>
+      </div>
+      <div class="danfe-cell" style="flex:1;text-align:center;display:flex;flex-direction:column;justify-content:center;gap:4px">
+        <label>Nº DA NF</label><span style="font-size:15px">${nota.numero}</span>
+        <label>SÉRIE</label><span>${nota.serie}</span>
+        <label>EMISSÃO</label><span style="font-size:10px">${fmtData(nota.data)}</span>
+        <label>FL.</label><span>1/1</span>
+      </div>
+    </div>
+    <!-- CHAVE -->
+    <div class="danfe-row"><div class="danfe-cell" style="flex:1;text-align:center">
+      <label>CHAVE DE ACESSO (44 DÍGITOS)</label>
+      <span style="font-size:10px;letter-spacing:1.5px">${nota.chave}</span>
+    </div></div>
+    <!-- DESTINATÁRIO -->
+    <div class="danfe-row" style="background:var(--gray-100)">
+      <div class="danfe-cell" style="flex:3"><label>DESTINATÁRIO / REMETENTE</label><span>${nota.destinatario}</span></div>
+      <div class="danfe-cell" style="flex:1.2"><label>CNPJ / CPF</label><span>${nota.cnpjDest}</span></div>
+      <div class="danfe-cell" style="flex:0.7"><label>DATA SAÍDA/ENTRADA</label><span>${fmtData(nota.data)}</span></div>
+    </div>
+    <div class="danfe-row">
+      <div class="danfe-cell" style="flex:2"><label>MUNICÍPIO DESTINO</label><span>${nota.municipioDest}</span></div>
+      <div class="danfe-cell" style="flex:.5"><label>UF DEST.</label><span>${nota.ufDest}</span></div>
+      <div class="danfe-cell" style="flex:1"><label>CFOP</label><span>${nota.cfop}</span></div>
+      <div class="danfe-cell" style="flex:2"><label>NAT. OPERAÇÃO</label><span>${nota.natOp}</span></div>
+      <div class="danfe-cell" style="flex:1"><label>PAGAMENTO</label><span>${nota.pagto}</span></div>
+    </div>
+    <!-- TOTAIS -->
+    <div class="danfe-row" style="background:var(--navy-pale)">
+      <div class="danfe-cell" style="flex:1"><label>BC ICMS (R$)</label><span>R$ ${fmtN(totProd.toFixed(2))}</span></div>
+      <div class="danfe-cell" style="flex:1"><label>VL. ICMS (R$)</label><span>R$ ${fmtN((nota.totIcms||0).toFixed(2))}</span></div>
+      <div class="danfe-cell" style="flex:1"><label>BC ICMS ST (R$)</label><span>R$ 0,00</span></div>
+      <div class="danfe-cell" style="flex:1"><label>VL. ICMS ST (R$)</label><span>R$ 0,00</span></div>
+      <div class="danfe-cell" style="flex:1"><label>VL. IPI (R$)</label><span>R$ ${fmtN((nota.totIpi||0).toFixed(2))}</span></div>
+      <div class="danfe-cell" style="flex:1"><label>DESCONTO (R$)</label><span>R$ ${fmtN((nota.totDesc||0).toFixed(2))}</span></div>
+      <div class="danfe-cell" style="flex:1.3"><label style="color:var(--navy);font-weight:900;font-family:'IBM Plex Sans',sans-serif">VALOR TOTAL DA NF (R$)</label><span style="font-size:13px;color:var(--navy)">R$ ${fmtN(nota.total.toFixed(2))}</span></div>
+    </div>
+    <!-- PRODUTOS HEADER -->
+    <div class="danfe-row" style="background:var(--navy);color:#fff">
+      <div class="danfe-cell" style="flex:1"><span style="color:#fff;font-size:10px;font-family:'IBM Plex Sans',sans-serif">DADOS DOS PRODUTOS / SERVIÇOS</span></div>
+    </div>
+    <div class="danfe-row" style="background:var(--gray-100)">
+      <div class="danfe-cell" style="flex:.3"><label>#</label></div>
+      <div class="danfe-cell" style="flex:3"><label>DESCRIÇÃO DO PRODUTO/SERVIÇO</label></div>
+      <div class="danfe-cell" style="flex:1"><label>NCM/SH</label></div>
+      <div class="danfe-cell" style="flex:.5"><label>CST</label></div>
+      <div class="danfe-cell" style="flex:.5"><label>CFOP</label></div>
+      <div class="danfe-cell" style="flex:.4"><label>UN</label></div>
+      <div class="danfe-cell" style="flex:.6"><label>QTD</label></div>
+      <div class="danfe-cell" style="flex:.9"><label>VL. UNIT.</label></div>
+      <div class="danfe-cell" style="flex:.5"><label>ICMS%</label></div>
+      <div class="danfe-cell" style="flex:.5"><label>IPI%</label></div>
+      <div class="danfe-cell" style="flex:.9"><label>VL. TOTAL</label></div>
+    </div>
+    ${nota.produtos.map((p,i)=>`<div class="danfe-row" style="${i%2===0?'':'background:#fafafa'}">
+      <div class="danfe-cell" style="flex:.3">${i+1}</div>
+      <div class="danfe-cell" style="flex:3"><span>${p.desc}</span></div>
+      <div class="danfe-cell" style="flex:1"><span>${p.ncm}</span></div>
+      <div class="danfe-cell" style="flex:.5"><span>${p.cst}</span></div>
+      <div class="danfe-cell" style="flex:.5"><span>${p.cfop||nota.cfop}</span></div>
+      <div class="danfe-cell" style="flex:.4"><span>${p.un}</span></div>
+      <div class="danfe-cell" style="flex:.6"><span>${p.qtd}</span></div>
+      <div class="danfe-cell" style="flex:.9"><span>R$ ${fmtN(p.vunit.toFixed(2))}</span></div>
+      <div class="danfe-cell" style="flex:.5"><span>${p.picms}%</span></div>
+      <div class="danfe-cell" style="flex:.5"><span>${p.pipi}%</span></div>
+      <div class="danfe-cell" style="flex:.9"><span>R$ ${fmtN((p.qtd*p.vunit*(1-(p.desc_pct||0)/100)).toFixed(2))}</span></div>
+    </div>`).join('')}
+    <!-- TOTAIS FINAIS -->
+    <div class="danfe-row" style="background:var(--navy)">
+      <div class="danfe-cell" style="flex:3"><span style="color:#fff;font-family:'IBM Plex Sans',sans-serif">TOTAIS GERAIS</span></div>
+      <div class="danfe-cell" style="flex:1"><label style="color:rgba(255,255,255,.5)">VL. PRODUTOS</label><span style="color:#fff">R$ ${fmtN(nota.totProd.toFixed(2))}</span></div>
+      <div class="danfe-cell" style="flex:1"><label style="color:rgba(255,255,255,.5)">DESCONTO</label><span style="color:#fff">R$ ${fmtN((nota.totDesc||0).toFixed(2))}</span></div>
+      <div class="danfe-cell" style="flex:1"><label style="color:rgba(255,255,255,.5)">PIS</label><span style="color:#fff">R$ ${fmtN((nota.totPis||0).toFixed(2))}</span></div>
+      <div class="danfe-cell" style="flex:1"><label style="color:rgba(255,255,255,.5)">COFINS</label><span style="color:#fff">R$ ${fmtN((nota.totCofins||0).toFixed(2))}</span></div>
+      <div class="danfe-cell" style="flex:1.3"><label style="color:rgba(255,255,255,.5)">TOTAL NF</label><span style="color:#8ec5fc;font-size:14px;font-weight:900">R$ ${fmtN(nota.total.toFixed(2))}</span></div>
+    </div>
+    <!-- INFO COMPLEMENTAR + PROTOCOLO -->
+    <div class="danfe-row">
+      <div class="danfe-cell" style="flex:1"><label>INFORMAÇÕES COMPLEMENTARES</label><span style="font-size:10px;font-weight:400;font-family:'IBM Plex Sans',sans-serif">${nota.infoCompl||'—'}</span></div>
+    </div>
+    <div class="danfe-row" style="background:var(--green-light)">
+      <div class="danfe-cell" style="flex:1">
+        <label style="color:var(--green)">PROTOCOLO DE AUTORIZAÇÃO DE USO – SEFAZ</label>
+        <span style="color:var(--green);font-size:10px">${nota.protocolo} – ${new Date().toLocaleString('pt-BR')} – Autorizado o uso (cStat 100)</span>
+      </div>
+    </div>
+    ${nota.eventos.length?`<div class="danfe-row" style="background:var(--orange-light)">
+      <div class="danfe-cell" style="flex:1">
+        <label style="color:var(--orange)">EVENTOS REGISTRADOS</label>
+        <span style="color:var(--orange);font-size:10px">${nota.eventos.map(e=>`${e.tipoLabel} – Protocolo: ${e.protocolo} (${e.data})`).join(' | ')}</span>
+      </div>
+    </div>`:''}
+  </div>
+  <p style="text-align:center;font-size:9px;margin-top:10px;color:#aaa;font-family:'IBM Plex Sans',sans-serif">
+    ⚠ Documento gerado em ambiente de SIMULAÇÃO para fins EDUCACIONAIS – C.E.C.P. Cursos | CNPJ 35.863.867/0001-55 | Projeto Capacita Brasil. Sem validade fiscal.
+  </p>`;
+  wrap.style.display='block';
+  wrap.scrollIntoView({behavior:'smooth'});
+}
+
+// ─── NOVA NOTA ───
+function novaNota() {
+  estado.ultimaNota=null;
+  document.getElementById('transmissao-alertas').innerHTML='';
+  [1,2,3,4].forEach(n=>setTlStep(n,'','Aguardando'));
+  document.getElementById('btn-ver-danfe').classList.add('hidden');
+  document.getElementById('btn-nova').classList.add('hidden');
+  document.getElementById('danfe-wrap').style.display='none';
+  estado.produtos=[]; pId=0; renderProdutos();
+}
+
+// ─── HISTÓRICO ───
+function renderHistorico() {
+  const div=document.getElementById('historico-body');
+  if(!estado.notasEmitidas.length){div.innerHTML='<p class="text-sm text-muted">Nenhuma nota emitida nesta sessão.</p>';return;}
+  div.innerHTML=estado.notasEmitidas.slice().reverse().map(n=>`
+    <div class="history-item" onclick="reabrirNota('${n.chave}')">
+      <div class="hi-modelo">NF</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13px">${n.emitente} → ${n.destinatario}</div>
+        <div class="hi-chave">${n.chave}</div>
+        <div style="font-size:11px;color:var(--gray-600);margin-top:3px">
+          ${fmtData(n.data)} | Nº ${n.numero} | Série ${n.serie} | ${n.cfop} | ${n.natOp} | <strong>R$ ${fmtN(n.total.toFixed(2))}</strong>
+        </div>
+        ${n.eventos.length?`<div style="font-size:10px;color:var(--orange);margin-top:2px">Eventos: ${n.eventos.map(e=>e.tipoLabel).join(', ')}</div>`:''}
+      </div>
+      <div><span class="status-badge status-${n.status}">${n.status.toUpperCase()}</span></div>
+    </div>`).join('');
+}
+
+function reabrirNota(chave) {
+  const nota=estado.notasEmitidas.find(n=>n.chave===chave);
+  if(!nota) return;
+  estado.ultimaNota=nota;
+  document.getElementById('btn-ver-danfe').classList.remove('hidden');
+  document.getElementById('btn-nova').classList.remove('hidden');
+  verDanfe();
+  showSection('sec-emitir');
+}
+
+// ─── EXPORTAR CSV ───
+function exportarHistoricoCSV() {
+  if(!estado.notasEmitidas.length) { alert('Nenhuma nota emitida.'); return; }
+  const header=['Chave','Número','Série','Data','Emitente','CNPJ Emit.','Destinatário','CNPJ Dest.','CFOP','Natureza','Total','Status','Protocolo'];
+  const rows = estado.notasEmitidas.map(n=>[
+    n.chave, n.numero, n.serie, n.data, `"${n.emitente}"`, n.cnpj, `"${n.destinatario}"`,
+    n.cnpjDest, n.cfop, `"${n.natOp}"`, n.total.toFixed(2), n.status, n.protocolo
+  ].join(';'));
+  const csv = [header.join(';'), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download = `CECP_NFe_Historico_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ─── EVENTOS ───
+function atualizarSelectEvento() {
+  const sel=document.getElementById('evt-nota-sel');
+  sel.innerHTML='<option value="">— Selecione —</option>';
+  estado.notasEmitidas.filter(n=>n.status==='autorizada').forEach(n=>{
+    const opt=document.createElement('option');
+    opt.value=n.chave; opt.textContent=`NF-e ${n.numero} – ${n.emitente} – R$ ${fmtN(n.total.toFixed(2))}`;
+    sel.appendChild(opt);
+  });
+}
+
+function selecionarNotaEvento(){}
+
+function onEvtTipoChange(){
+  const tipo=document.getElementById('evt-tipo').value;
+  document.getElementById('evt-cce-campos').classList.toggle('hidden', tipo!=='110110');
+}
+
+async function simularEvento() {
+  const alertDiv=document.getElementById('eventos-alertas'), logDiv=document.getElementById('eventos-log');
+  alertDiv.innerHTML='';
+  const chave=document.getElementById('evt-nota-sel').value;
+  const tipo=document.getElementById('evt-tipo').value;
+  const just=document.getElementById('evt-just').value.trim();
+  if(!chave){alertDiv.innerHTML='<div class="alert alert-warning"><span class="alert-icon">⚠️</span><div>Selecione uma nota autorizada.</div></div>';return;}
+  if(just.length<15){alertDiv.innerHTML='<div class="alert alert-warning"><span class="alert-icon">⚠️</span><div>Justificativa deve ter no mínimo 15 caracteres.</div></div>';return;}
+  const nota=estado.notasEmitidas.find(n=>n.chave===chave);
+  if(!nota) return;
+  // Verificar prazo de cancelamento (simulação: sempre OK)
+  alertDiv.innerHTML='<div class="alert alert-info"><span class="alert-icon">⏳</span><div>Processando evento no SEFAZ...</div></div>';
+  await sleep(1500);
+  const protocolo='2'+Date.now().toString().slice(0,12);
+  const dataEvt=new Date().toLocaleString('pt-BR');
+  const tipoLabel=tipo==='110111'?'Cancelamento de NF-e':'Carta de Correção (CC-e)';
+  const cStat=tipo==='110111'?'101':'135';
+  const motivo=tipo==='110111'?'Cancelamento homologado':'Evento registrado e vinculado à NF-e';
+  nota.status=tipo==='110111'?'cancelada':'cce';
+  const seqEvt=nota.eventos.filter(e=>e.tipo===tipo).length+1;
+  nota.eventos.push({tipo,tipoLabel,just,protocolo,data:dataEvt,seq:seqEvt});
+  alertDiv.innerHTML=`<div class="alert alert-success"><span class="alert-icon">✅</span><div>
+    <strong>Evento Registrado com Sucesso!</strong><br>
+    Tipo: ${tipoLabel} (Seq. ${seqEvt})<br>
+    Protocolo: <strong>${protocolo}</strong><br>
+    cStat: <strong>${cStat}</strong> – ${motivo}<br>
+    Data/Hora: ${dataEvt}
+  </div></div>`;
+  logDiv.innerHTML=`<div class="card" style="margin-top:0">
+    <div class="card-header"><div class="card-header-icon">📨</div><h3>${tipoLabel} – Seq. ${seqEvt}</h3><span class="badge-doc">${dataEvt}</span></div>
+    <div class="card-body">
+      <p class="text-sm"><strong>NF-e:</strong> ${chave.slice(0,20)}...${chave.slice(-4)}</p>
+      <p class="text-sm"><strong>Justificativa:</strong> ${just}</p>
+      <p class="text-sm" style="color:var(--green)"><strong>Protocolo:</strong> ${protocolo} | cStat: ${cStat}</p>
+    </div></div>`+logDiv.innerHTML;
+  document.getElementById('evt-just').value='';
+  document.getElementById('evt-just-count').textContent='0 / 1000 caracteres';
+  atualizarSelectEvento();
+  document.getElementById('nav-hist-count').textContent=estado.notasEmitidas.length;
+}
+
+// ─── CONSULTA ───
+function preencherChaveAleatoria() {
+  const ultima = estado.notasEmitidas[estado.notasEmitidas.length-1];
+  if(ultima) document.getElementById('consulta-chave').value = ultima.chave;
+  else alert('Nenhuma nota transmitida nesta sessão.');
+}
+
+async function consultarNFe() {
+  const chave=document.getElementById('consulta-chave').value.replace(/\D/g,'');
+  const res=document.getElementById('consulta-result');
+  if(chave.length!==44){res.innerHTML='<div class="alert alert-danger"><span class="alert-icon">❌</span><div>Chave deve ter exatamente 44 dígitos.</div></div>';return;}
+  res.innerHTML='<div class="alert alert-info"><span class="alert-icon">⏳</span><div>Consultando NfeConsultaProtocolo4 no SEFAZ-RN...</div></div>';
+  await sleep(1200);
+  const nota=estado.notasEmitidas.find(n=>n.chave===chave);
+  if(nota){
+    res.innerHTML=`<div class="alert alert-success"><span class="alert-icon">✅</span><div>
+      <strong>NF-e Encontrada!</strong><br>
+      Número: ${nota.numero} | Série: ${nota.serie} | Emitente: ${nota.emitente}<br>
+      Status: <strong>${nota.status.toUpperCase()}</strong> | Protocolo: ${nota.protocolo}<br>
+      Total: R$ ${fmtN(nota.total.toFixed(2))} | CFOP: ${nota.cfop} | ${nota.natOp}
+      ${nota.eventos.length?`<br>Eventos: ${nota.eventos.map(e=>e.tipoLabel).join(', ')}`:''}
+    </div></div>`;
+  } else {
+    res.innerHTML=`<div class="alert alert-warning"><span class="alert-icon">⚠️</span><div>
+      <strong>NF-e não encontrada nesta sessão de simulação.</strong><br>
+      cStat: 217 – NF-e não consta na base de dados da SEFAZ<br>
+      <em>Dica: Use apenas chaves emitidas nesta sessão.</em>
+    </div></div>`;
+  }
+}
+
+// ─── MASKS ───
+function maskCNPJ(input){let v=input.value.replace(/\D/g,'');if(v.length<=14){v=v.replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d)/,'$1-$2');}input.value=v;}
+function maskCEP(input){let v=input.value.replace(/\D/g,'');if(v.length>5)v=v.slice(0,5)+'-'+v.slice(5,8);input.value=v;}
+
+// ─── UTILS ───
+function fmtN(v){return String(v).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+function fmtData(d){if(!d)return'';const p=d.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d;}
+</script>
+</body>
+</html>

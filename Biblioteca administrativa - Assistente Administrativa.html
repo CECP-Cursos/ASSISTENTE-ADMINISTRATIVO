@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biblioteca Educativa — Documentos Administrativos</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f0f2f5; color: #222; }
+  header { background: #1a3a5c; color: white; padding: 18px 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  header h1 { font-size: 20px; font-weight: 700; }
+  header p { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+  .edu-toggle { background: #f59e0b; color: #1a1a1a; border: none; border-radius: 999px; padding: 8px 18px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; white-space: nowrap; }
+  .edu-toggle:hover { background: #fbbf24; transform: scale(1.03); }
+  .edu-toggle.active { background: #10b981; color: white; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .card { background: white; border: 1.5px solid #e0e0e0; border-radius: 12px; padding: 14px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+  .card:hover { border-color: #1a3a5c; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .card.active { border-color: #1a3a5c; background: #eaf0fb; }
+  .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 999px; margin-bottom: 8px; }
+  .card-name { font-size: 13px; font-weight: 600; line-height: 1.3; color: #1a1a1a; }
+  .card-desc { font-size: 11px; color: #666; margin-top: 4px; line-height: 1.4; }
+  .preview-wrapper { display: flex; gap: 16px; align-items: flex-start; }
+  .preview-box { background: white; border: 1.5px solid #e0e0e0; border-radius: 14px; overflow: hidden; flex: 1; min-width: 0; }
+  .preview-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #eee; background: #fafafa; flex-wrap: wrap; gap: 8px; }
+  .preview-title { font-size: 13px; font-weight: 600; color: #444; }
+  .preview-body { padding: 24px; overflow-x: auto; }
+  .placeholder { text-align: center; padding: 48px 16px; color: #aaa; font-size: 14px; }
+  .placeholder span { font-size: 36px; display: block; margin-bottom: 10px; }
+
+  /* BLOCK NAVIGATION */
+  .block-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+  .block-btn { background: #eaf0fb; border: 1.5px solid #c3d9f7; color: #1a3a5c; border-radius: 999px; padding: 5px 14px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+  .block-btn:hover { background: #1a3a5c; color: white; border-color: #1a3a5c; }
+  .block-btn.active { background: #10b981; color: white; border-color: #10b981; }
+
+  /* EDUCATIONAL SIDEBAR */
+  .edu-sidebar { width: 320px; flex-shrink: 0; display: none; flex-direction: column; gap: 0; }
+  .edu-sidebar.visible { display: flex; }
+  .edu-sidebar-inner { background: white; border: 1.5px solid #e0e0e0; border-radius: 14px; overflow: hidden; position: sticky; top: 16px; max-height: calc(100vh - 80px); display: flex; flex-direction: column; }
+  .edu-sidebar-header { background: #1a3a5c; color: white; padding: 14px 16px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .edu-sidebar-body { padding: 0; overflow-y: auto; flex: 1; }
+  .edu-idle { padding: 32px 20px; text-align: center; color: #999; font-size: 13px; }
+  .edu-idle-icon { font-size: 40px; display: block; margin-bottom: 12px; }
+  .edu-info { padding: 16px; }
+  .edu-info-title { font-size: 14px; font-weight: 700; color: #1a3a5c; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #e8f0fb; }
+  .edu-section { margin-bottom: 14px; }
+  .edu-section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 5px; display: flex; align-items: center; gap: 4px; }
+  .edu-section-text { font-size: 12px; line-height: 1.65; color: #333; }
+  .edu-alert { background: #fff3cd; border-left: 3px solid #f59e0b; border-radius: 4px; padding: 8px 10px; margin-top: 5px; font-size: 11px; color: #7c5900; line-height: 1.5; }
+  .edu-tip { background: #e8f5e9; border-left: 3px solid #10b981; border-radius: 4px; padding: 8px 10px; margin-top: 5px; font-size: 11px; color: #1a5c3a; line-height: 1.5; }
+
+  /* DOCUMENT HIGHLIGHT */
+  .edu-highlight { background: rgba(245,158,11,0.15); border-radius: 3px; outline: 1.5px solid #f59e0b; padding: 1px 3px; transition: all 0.2s; }
+
+  /* DOCUMENT STYLES */
+  .doc { max-width: 680px; margin: 0 auto; background: white; border: 1px solid #ccc; font-size: 10px; line-height: 1.5; color: #111; padding: 0; }
+  .doc table { border-collapse: collapse; width: 100%; }
+  .doc td, .doc th { border: 1px solid #999; padding: 3px 4px; }
+  .doc .bold { font-weight: bold; }
+  .doc .serif { font-family: 'Times New Roman', serif; }
+  .doc .center { text-align: center; }
+  .doc .key-row { background: #f7f7f7; }
+  .doc .header-blue { background: #ddeeff; font-weight: bold; }
+
+  @media print { body { background: white; } .grid, .preview-header, .edu-sidebar, .edu-toggle { display: none !important; } .preview-body { padding: 0; } }
+  @media (max-width: 768px) { .preview-wrapper { flex-direction: column; } .edu-sidebar { width: 100%; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📋 Biblioteca Educativa — Documentos Administrativos</h1>
+    <p>Modelos para uso didático em cursos — Selecione um documento e explore os Blocos Educativos</p>
+  </div>
+  <button class="edu-toggle active" id="edu-toggle-btn" onclick="toggleEduMode()">
+    🎓 Modo Educativo: ON
+  </button>
+</header>
+
+<div class="container">
+  <div class="grid">
+    <div class="card" id="btn-oficio" onclick="show('oficio')">
+      <span class="badge" style="background:#E6F1FB;color:#185FA5">Ofício</span>
+      <div class="card-name">Ofício</div>
+      <div class="card-desc">Comunicação formal entre órgãos</div>
+    </div>
+    <div class="card" id="btn-memo" onclick="show('memo')">
+      <span class="badge" style="background:#EAF3DE;color:#3B6D11">Memo</span>
+      <div class="card-name">Memorando Interno</div>
+      <div class="card-desc">Comunicação interna rápida</div>
+    </div>
+    <div class="card" id="btn-req" onclick="show('req')">
+      <span class="badge" style="background:#E1F5EE;color:#0F6E56">Req.</span>
+      <div class="card-name">Requerimento</div>
+      <div class="card-desc">Solicitação formal a autoridade</div>
+    </div>
+    <div class="card" id="btn-ata" onclick="show('ata')">
+      <span class="badge" style="background:#EEEDFE;color:#534AB7">Ata</span>
+      <div class="card-name">Ata de Reunião</div>
+      <div class="card-desc">Registro de deliberações</div>
+    </div>
+    <div class="card" id="btn-rel" onclick="show('rel')">
+      <span class="badge" style="background:#FAEEDA;color:#854F0B">Rel.</span>
+      <div class="card-name">Relatório Gerencial</div>
+      <div class="card-desc">Exposição de resultados</div>
+    </div>
+    <div class="card" id="btn-dec" onclick="show('dec')">
+      <span class="badge" style="background:#FBEAF0;color:#993556">Dec.</span>
+      <div class="card-name">Declaração</div>
+      <div class="card-desc">Afirmação formal de fato</div>
+    </div>
+    <div class="card" id="btn-proc" onclick="show('proc')">
+      <span class="badge" style="background:#FAECE7;color:#993C1D">Proc.</span>
+      <div class="card-name">Procuração Particular</div>
+      <div class="card-desc">Mandato para representação</div>
+    </div>
+    <div class="card" id="btn-cont" onclick="show('cont')">
+      <span class="badge" style="background:#F1EFE8;color:#444441">Cont.</span>
+      <div class="card-name">Contrato de Serviços</div>
+      <div class="card-desc">Acordo entre as partes</div>
+    </div>
+  </div>
+
+  <div class="preview-wrapper">
+    <div class="preview-box">
+      <div class="preview-header">
+        <span class="preview-title" id="preview-title">Selecione um documento acima para visualizar</span>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="block-nav" id="block-nav"></div>
+          <button onclick="window.print()" style="font-size:12px;padding:5px 14px;border:1px solid #ccc;border-radius:6px;cursor:pointer;background:white">🖨️ Imprimir</button>
+        </div>
+      </div>
+      <div class="preview-body" id="preview-body">
+        <div class="placeholder"><span>📋</span>Clique em um dos cards acima para visualizar o modelo completo</div>
+      </div>
+    </div>
+
+    <div class="edu-sidebar visible" id="edu-sidebar">
+      <div class="edu-sidebar-inner">
+        <div class="edu-sidebar-header">🎓 Explicação do Bloco</div>
+        <div class="edu-sidebar-body" id="edu-sidebar-body">
+          <div class="edu-idle">
+            <span class="edu-idle-icon">👆</span>
+            Selecione um documento e clique em um dos <strong>blocos coloridos</strong> no topo para ver a explicação didática.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var currentDoc = null;
+var eduMode = true;
+var activeBlockBtn = null;
+
+// ── BLOCK DEFINITIONS ───────────────────────────────
+var BLOCKS = {
+  oficio: [
+    { id: 'cab', label: '📌 Cabeçalho e Numeração' },
+    { id: 'dest', label: '🎩 Destinatário (Vocativo)' },
+    { id: 'texto', label: '📝 Texto / Assunto' }
+  ],
+  memo: [
+    { id: 'cab', label: '📌 Cabeçalho e Numeração' },
+    { id: 'dest', label: '🎩 Destinatário (Vocativo)' },
+    { id: 'texto', label: '📝 Texto / Assunto' }
+  ],
+  req: [
+    { id: 'qualif', label: '🪪 Qualificação do Requerente' },
+    { id: 'objeto', label: '🎯 Objeto do Requerimento' },
+    { id: 'enc', label: '✍️ Encerramento e Assinatura' }
+  ],
+  ata: [
+    { id: 'qualif', label: '🗓️ Qualificação da Reunião' },
+    { id: 'delib', label: '⚖️ Deliberações' },
+    { id: 'enc', label: '✍️ Encerramento e Assinaturas' }
+  ],
+  rel: [
+    { id: 'cab', label: '📌 Cabeçalho e Identificação' },
+    { id: 'dados', label: '📊 Dados e Resultados' },
+    { id: 'obs', label: '💬 Observações do Responsável' }
+  ],
+  dec: [
+    { id: 'qualif', label: '🪪 Qualificação do Declarante' },
+    { id: 'objeto', label: '📣 Objeto da Declaração' },
+    { id: 'enc', label: '✍️ Encerramento e Assinatura' }
+  ],
+  proc: [
+    { id: 'outorg', label: '👤 Outorgante / Outorgado' },
+    { id: 'poderes', label: '⚖️ Poderes Outorgados' },
+    { id: 'enc', label: '✍️ Assinaturas e Validade' }
+  ],
+  cont: [
+    { id: 'objeto', label: '📋 Cláusula do Objeto' },
+    { id: 'valor', label: '💰 Valor e Pagamento' },
+    { id: 'foro', label: '🏛️ Foro — Mossoró/RN' }
+  ]
+};
+
+// ── EDU DATA ─────────────────────────────────────────
+var EDU = {
+  oficio: {
+    cab: {
+      title: '📌 Cabeçalho e Numeração do Ofício',
+      meaning: 'O cabeçalho contém o timbre institucional (nome do órgão, endereço, contatos) e a numeração sequencial no formato <b>Ofício nº 082/2026 — SMF</b>. O número inclui o ano e a sigla da unidade emissora.',
+      purpose: 'Serve para o controle de arquivo e rastreabilidade. Com o número e o ano, qualquer servidor consegue localizar o documento no protocolo, verificar prazos de resposta e organizar o histórico de correspondências.',
+      error: 'Reiniciar a numeração no meio do ano ou usar numerações duplicadas gera confusão no protocolo e pode invalidar o controle de prazos em processos administrativos.',
+      tip: '✏️ <b>Dica de Redação:</b> A numeração deve ser sequencial por unidade emissora. Ex: "Ofício nº 001/2026 — DEPTOFISCAL". Ao trocar de ano, reinicie em 001.'
+    },
+    dest: {
+      title: '🎩 Destinatário e Vocativo — Pronomes de Tratamento',
+      meaning: 'O vocativo é a saudação direta ao destinatário antes do texto. O pronome de tratamento varia conforme a hierarquia: <b>Vossa Senhoria (V.Sa.)</b> para servidores e autoridades em geral; <b>Vossa Excelência (V.Exa.)</b> para Presidentes, Governadores, Ministros, Secretários de Estado, Juízes e Senadores.',
+      purpose: 'Demonstra respeito ao cargo e confere formalidade jurídica ao documento. O uso errado pode ser interpretado como falta de protocolo ou desconhecimento das normas da redação oficial, prejudicando a imagem do emitente.',
+      error: 'Usar "Prezado Senhor" no lugar de "Vossa Excelência" ao se dirigir a um Juiz ou Secretário de Estado é erro grave de protocolo. Nunca use "Você" em documentos oficiais.',
+      tip: '✏️ <b>Dica de Redação:</b> Para Prefeitos → V.Exa. | Para Vereadores → V.Exa. | Para Diretores de empresa privada → V.Sa. | Em caso de dúvida, use V.Sa., que é o mais genérico e seguro.'
+    },
+    texto: {
+      title: '📝 Texto / Assunto — Clareza e Objetividade',
+      meaning: 'O campo "Assunto" é uma frase-resumo que antecede o corpo do texto. O primeiro parágrafo do texto deve expor o objetivo do ofício de forma direta e clara, sem rodeios.',
+      purpose: 'Quem recebe dezenas de ofícios precisa identificar rapidamente o que está sendo solicitado. Um assunto vago ou um primeiro parágrafo prolixo atrasa o despacho e pode gerar arquivamento indevido.',
+      error: 'Começar o texto com longas saudações ou histórico desnecessário é o erro mais comum. O Manual de Redação da Presidência da República orienta que o fato relevante deve ser exposto no primeiro parágrafo.',
+      tip: '✏️ <b>Dica de Redação:</b> Estruture assim: 1º parágrafo = objetivo; 2º parágrafo = fundamentação ou contexto; 3º parágrafo = solicitação ou encaminhamento. Finalize com "Atenciosamente,".'
+    }
+  },
+  memo: {
+    cab: {
+      title: '📌 Cabeçalho e Numeração do Memorando',
+      meaning: 'O memorando é um instrumento de comunicação <b>interna</b> entre setores ou departamentos da mesma organização. O cabeçalho traz: número sequencial (<b>Memo nº 14/2026</b>), DE (emissor), PARA (destinatário), CC (cópias), ASSUNTO e DATA.',
+      purpose: 'A estrutura de campos fixos (DE/PARA/ASSUNTO) agiliza a leitura e o arquivamento. O número sequencial permite controle interno e rastreabilidade das comunicações por setor.',
+      error: 'Usar memorando para comunicação externa (com outras empresas ou órgãos) é erro conceitual. Para comunicação externa, use Ofício. O memorando circula apenas internamente.',
+      tip: '✏️ <b>Dica de Redação:</b> O campo ASSUNTO deve ser específico: não escreva "Informações sobre sistema" — escreva "Migração do Sistema de Ponto para PontoDigital v3.0 em 02/05/2026".'
+    },
+    dest: {
+      title: '🎩 Destinatário — Hierarquia Interna',
+      meaning: 'No memorando, o campo PARA indica o cargo e o setor, e pode incluir o nome completo. O CC (com cópia) lista quem deve tomar ciência sem ser o destinatário principal.',
+      purpose: 'Garantir que a mensagem chegue às pessoas certas e que quem precisa tomar providências seja claramente identificado. O CC protege o emissor ao documentar quem foi informado.',
+      error: 'Omitir o CC quando a diretoria precisa ser informada pode gerar problemas se o destinatário direto não tomar a providência esperada. Sempre inclua no CC quem tem poder de cobrar o cumprimento.',
+      tip: '✏️ <b>Dica de Redação:</b> Endereçar "A Todos os Colaboradores" é aceitável para comunicados gerais, mas para cobranças de ação, sempre identifique o responsável nominalmente no campo PARA.'
+    },
+    texto: {
+      title: '📝 Texto do Memorando — Direto ao Ponto',
+      meaning: 'O texto do memorando deve ser conciso e direto. Começa expondo o fato ou comunicado, depois apresenta detalhes relevantes (prazos, etapas, impactos) e finaliza com a ação esperada ou informação de contato.',
+      purpose: 'Em ambiente empresarial, memorandos longos são ignorados. A objetividade é uma competência de comunicação valorizada e que demonstra respeito pelo tempo do receptor.',
+      error: 'Incluir informações pessoais, julgamentos ou linguagem informal é inadequado, mesmo sendo comunicação interna. O memorando tem caráter oficial e pode ser usado como evidência em processos trabalhistas.',
+      tip: '✏️ <b>Dica de Redação:</b> Use o formato: 1) O que está acontecendo; 2) O que muda / detalhe prático; 3) O que o receptor deve fazer; 4) Contato para dúvidas. Máximo de 3 parágrafos.'
+    }
+  },
+  req: {
+    qualif: {
+      title: '🪪 Qualificação Completa do Requerente',
+      meaning: 'É a identificação completa de quem faz o pedido: nome completo, nacionalidade, estado civil, profissão, RG, CPF, endereço completo e e-mail.',
+      purpose: 'A autoridade precisa identificar univocamente quem está requerendo para vincular o pedido à pessoa correta nos sistemas, verificar regularidade e enviar resposta. Dados incompletos atrasam ou inviabilizam o deferimento.',
+      error: 'Omitir o CPF ou endereço são os erros mais frequentes e causam devolução do requerimento. Verifique sempre se o número do CPF bate com o titular antes de assinar.',
+      tip: '✏️ <b>Dica de Redação:</b> Quando o requerente é pessoa jurídica, qualifique: Razão Social, CNPJ, sede, representante legal e cargo. Ex: "EMPRESA XYZ LTDA, inscrita no CNPJ sob o nº ..., representada por seu Diretor...".'
+    },
+    objeto: {
+      title: '🎯 Objeto do Requerimento — O que está sendo pedido',
+      meaning: 'O objeto é o núcleo do requerimento: descreve com precisão o que está sendo solicitado, para qual finalidade e qual o amparo legal ou documental do pedido.',
+      purpose: 'Sem clareza no objeto, a autoridade pode deferir algo diferente do pretendido ou negar por falta de fundamento. A finalidade declarada vincula o uso do documento concedido.',
+      error: 'Ser vago ("solicito informações sobre minha situação") é erro comum. Seja específico: qual certidão, referente a quais tributos, para qual finalidade (financiamento, licitação, etc.).',
+      tip: '✏️ <b>Dica de Redação:</b> Use o padrão: "A requerente solicita a emissão de [nome exato do documento], relativo a [período/tributo], para fins de [finalidade], conforme [número do processo/edital, se houver]."'
+    },
+    enc: {
+      title: '✍️ Encerramento — "Nestes Termos, Pede Deferimento"',
+      meaning: 'A fórmula "Nestes termos, pede deferimento" é o encerramento padrão do requerimento. Seguida de local, data e assinatura do requerente com CPF.',
+      purpose: 'É uma fórmula de estilo da linguagem jurídico-administrativa que sinaliza que o requerimento foi concluído e que o requerente pede decisão favorável. A ausência de data ou assinatura pode tornar o documento inválido.',
+      error: 'Esquecer a data ou assinar com nome diferente do qualificado no início invalida o requerimento. Se for pessoa jurídica, o representante legal deve assinar e indicar o cargo.',
+      tip: '✏️ <b>Dica de Redação:</b> Padrão final: "Nestes termos, pede deferimento. [Cidade (UF), DD de mês de AAAA.] [Linha de assinatura] [Nome completo] [CPF]".'
+    }
+  },
+  ata: {
+    qualif: {
+      title: '🗓️ Qualificação da Reunião — Data, Hora, Local e Presentes',
+      meaning: 'O cabeçalho da ata registra obrigatoriamente: número da ata, data, hora de início e término, local, pauta e lista nominal de todos os presentes com seus respectivos cargos.',
+      purpose: 'Esses elementos garantem a autenticidade e validade jurídica do documento. A lista de presentes define quem está vinculado às decisões tomadas e quem pode ser responsabilizado por seu cumprimento.',
+      error: 'Omitir o horário de início/término ou registrar apenas "alguns colaboradores presentes" sem nomear individualmente fragiliza a validade da ata como documento probatório em disputas trabalhistas ou societárias.',
+      tip: '✏️ <b>Dica de Redação:</b> Registre a pauta de forma objetiva: não "assuntos gerais", mas "1) Aprovação do orçamento 2026; 2) Eleição do Conselho Fiscal". Pautas vagas permitem contestar o que foi deliberado.'
+    },
+    delib: {
+      title: '⚖️ Deliberações — Texto Imparcial e Objetivo',
+      meaning: 'As deliberações registram as decisões tomadas na reunião de forma imparcial, sem opiniões pessoais do secretário que lavra a ata. Usa-se linguagem na 3ª pessoa e voz passiva.',
+      purpose: 'A ata é o único registro oficial do que foi decidido. Nas deliberações ficam documentadas: aprovações, rejeições, prazos, responsáveis por ações e percentual de votos (quando aplicável).',
+      error: 'Incluir frases como "o diretor achou interessante" ou "o colaborador reclamou de..." é inadequado. Registre apenas fatos: "Foi aprovado por unanimidade..." ou "Deliberou-se que o prazo seria...".',
+      tip: '✏️ <b>Dica de Redação:</b> Para cada deliberação, registre: o que foi decidido + quem é o responsável + qual é o prazo. Ex: "Deliberou-se pela contratação do serviço X, ficando a área de TI responsável pela formalização até 30/05/2026."'
+    },
+    enc: {
+      title: '✍️ Encerramento — Assinatura de Todos os Presentes',
+      meaning: 'A ata é encerrada com a declaração de encerramento da sessão, horário de término, nome de quem lavrou a ata, e as linhas de assinatura de todos os participantes listados.',
+      purpose: 'A assinatura de todos os presentes é o que confere validade às deliberações. Sem assinaturas, a ata não comprova que os participantes concordaram ou tomaram conhecimento das decisões.',
+      error: 'Ata assinada apenas pelo presidente da reunião e pelo secretário pode ser contestada pelos demais participantes. Para decisões que geram obrigações (multas, prazos, aprovações orçamentárias), todas as assinaturas são essenciais.',
+      tip: '✏️ <b>Dica de Redação:</b> Em reuniões remotas/online, registre no corpo da ata: "A reunião foi realizada por videoconferência e os presentes manifestaram sua concordância por e-mail institucional, cujas mensagens ficam arquivadas como anexo."'
+    }
+  },
+  rel: {
+    cab: {
+      title: '📌 Cabeçalho e Identificação do Relatório',
+      meaning: 'O cabeçalho do relatório gerencial identifica: nome do documento, período de referência, empresa, data de emissão e nome do responsável pela elaboração com seu cargo.',
+      purpose: 'Esses dados permitem rastrear quem é responsável pelas informações apresentadas e a qual período elas se referem. Em auditorias, o responsável identificado no cabeçalho responde pela veracidade dos dados.',
+      error: 'Relatórios sem identificação do responsável ou sem período claro são descartados em auditorias e processos de compliance, pois não é possível verificar a fonte dos dados.',
+      tip: '✏️ <b>Dica de Redação:</b> Inclua sempre a versão do relatório (v1.0, v2.0) se houver revisões, e indique se é preliminar ou definitivo. Isso evita que versões desatualizadas sejam usadas em decisões estratégicas.'
+    },
+    dados: {
+      title: '📊 Dados e Resultados — Clareza Numérica',
+      meaning: 'É o corpo do relatório: tabelas, indicadores, comparativos com metas, percentuais de variação e qualquer dado quantitativo relevante para a gestão.',
+      purpose: 'Os dados são a razão de existir do relatório gerencial. Eles fundamentam decisões de investimento, corte de custos, contratações e estratégias comerciais. Dados imprecisos levam a decisões erradas.',
+      error: 'Apresentar números sem contexto ("R$ 285.400,00 de receita") é menos útil do que dados comparativos ("R$ 285.400,00 — 14,2% acima da meta de R$ 250.000,00"). Sempre contextualize.',
+      tip: '✏️ <b>Dica de Redação:</b> Use três colunas-padrão para indicadores: Realizado | Meta | Variação (%). O leitor precisa de no máximo 5 segundos para entender se o resultado foi bom ou ruim.'
+    },
+    obs: {
+      title: '💬 Observações do Responsável — A Análise Qualitativa',
+      meaning: 'É o espaço onde o contador, gerente ou analista responsável interpreta os números, explica desvios, aponta riscos e faz recomendações.',
+      purpose: 'Números sem análise são dados brutos. As observações transformam dados em inteligência gerencial: explicam o porquê dos resultados, alertam sobre prazos críticos (como vencimento de guias) e orientam a tomada de decisão.',
+      error: 'Omitir alertas críticos nas observações (como o vencimento de uma DARF) por achar que o gestor "já sabe" é um erro de responsabilidade profissional. O relatório é um documento e deve ser autocontido.',
+      tip: '✏️ <b>Dica de Redação:</b> Estruture as observações em: 1) Justificativa dos desvios positivos; 2) Justificativa dos desvios negativos; 3) Alertas de prazo; 4) Recomendações para o próximo período.'
+    }
+  },
+  dec: {
+    qualif: {
+      title: '🪪 Qualificação do Declarante — Credibilidade e Responsabilidade',
+      meaning: 'A declaração começa com a identificação completa de quem declara: nome, CPF, profissão, registro profissional (CRC, OAB, CRM etc.) e endereço. A qualificação estabelece a capacidade e credibilidade do declarante.',
+      purpose: 'A qualificação é o que dá peso à declaração. Um contador com CRC registrado declara algo diferente de um leigo — há responsabilidade profissional e legal envolvida. A Receita Federal e licitantes exigem declarações de profissionais habilitados.',
+      error: 'Declarações emitidas por pessoa sem habilitação para o assunto (ex: um não-contador declarando regularidade fiscal de empresa) não têm valor legal e podem configurar falsidade ideológica.',
+      tip: '✏️ <b>Dica de Redação:</b> Inclua sempre a finalidade da declaração: "para fins de habilitação em processo licitatório (Edital nº 005/2026)". Isso delimita o uso do documento e protege o declarante de uso indevido.'
+    },
+    objeto: {
+      title: '📣 Objeto da Declaração — O Fato Declarado',
+      meaning: 'É o núcleo do documento: a afirmação de fato que o declarante atesta como verdadeira. Deve ser redigida de forma objetiva, sem ambiguidades, especificando período, entidade declarada e quais aspectos estão sendo atestados.',
+      purpose: 'O objeto vincula juridicamente o declarante. Ao assinar, ele confirma que as informações são verdadeiras "sob as penas da lei", o que inclui responsabilidade civil e criminal em caso de falsidade.',
+      error: 'Declarar algo genérico ("a empresa está em dia com suas obrigações") sem especificar quais obrigações e qual período deixa margens para questionamento. Seja específico: "obrigações tributárias federais, estaduais e municipais, exercícios 2024 e 2025".',
+      tip: '✏️ <b>Dica de Redação:</b> Use afirmações positivas e precisas: "Declaro que... está em situação REGULAR perante... relativamente a... nos exercícios..." Evite negativas duplas que confundem: não use "não está em situação irregular".'
+    },
+    enc: {
+      title: '✍️ Encerramento — Local, Data e Assinatura com Registro',
+      meaning: 'A declaração é encerrada com local, data e assinatura acompanhada do nome completo e número do registro profissional (CRC, OAB, CRM etc.). A data é essencial para definir a validade temporal do documento.',
+      purpose: 'Declarações têm prazo de validade implícito ou explícito. A data determina em qual momento o fato era verdadeiro. Uma declaração de regularidade fiscal válida em abril pode não ser válida em outubro se surgirem débitos.',
+      error: 'Assinar sem incluir o número do registro profissional em declarações que exigem habilitação técnica é irregularidade. O CRC ativo é condição para validade de declarações contábeis.',
+      tip: '✏️ <b>Dica de Redação:</b> Se a declaração for exigida por edital, verifique a validade exigida pelo certame (normalmente 60 a 90 dias). Se necessário, inclua: "Esta declaração tem validade de 60 dias a contar da data de emissão."'
+    }
+  },
+  proc: {
+    outorg: {
+      title: '👤 Outorgante e Outorgado — Quem Dá e Quem Recebe os Poderes',
+      meaning: '<b>Outorgante</b> = quem tem o poder e o transfere (o dono, o titular). <b>Outorgado</b> = quem recebe o poder para agir em nome do outorgante. Na procuração, ambos devem ser qualificados com nome completo, CPF, RG, profissão e endereço.',
+      purpose: 'A identificação precisa dos dois evita fraudes e nulidades. Se o outorgado for advogado, deve constar o número da OAB; se for contador, o CRC. Isso vincula a habilitação profissional aos atos que poderá praticar.',
+      error: '<b>Erro mais comum:</b> Digitar número de RG ou CPF errado. Um único dígito errado invalida o documento inteiro, pois o outorgado não conseguirá provar sua identidade com um CPF divergente do documento oficial.',
+      tip: '✏️ <b>Dica de Redação:</b> Sempre confira RG e CPF consultando o documento físico no momento da redação. Para procurações de pessoa jurídica, qualifique também o representante legal: "representada por seu sócio-administrador, Sr. X, portador do CPF..."'
+    },
+    poderes: {
+      title: '⚖️ Poderes Outorgados — Ad Judicia vs. Poderes Específicos',
+      meaning: '<b>Poderes Ad Judicia:</b> São poderes judiciais amplos, que permitem ao advogado representar em qualquer ação judicial em nome do outorgante. <b>Poderes Específicos:</b> Limitam o outorgado a praticar apenas atos determinados (ex: assinar contratos, receber valores, requerer certidões).',
+      purpose: 'Delimitar os poderes protege o outorgante. Uma procuração com "poderes gerais e amplos" sem especificação permite que o outorgado pratique atos que o outorgante talvez não autorizasse conscientemente.',
+      error: 'Conceder poderes para "vender bens imóveis" em uma procuração que deveria ser apenas para questões fiscais é um risco grave. Procurações com poderes excessivos são exploradas em fraudes patrimoniais.',
+      tip: '✏️ <b>Dica de Redação:</b> Para fins fiscais e administrativos, especifique: "poderes para representar perante [órgãos], podendo assinar [documentos específicos], requerer [certidões específicas], relativamente ao CNPJ [nº], nos exercícios [anos]." Quanto mais específico, mais seguro.'
+    },
+    enc: {
+      title: '✍️ Assinaturas, Testemunhas e Validade',
+      meaning: 'A procuração particular deve ser assinada pelo outorgante com testemunhas (normalmente 2). O campo de validade define até quando o outorgado pode agir. O reconhecimento de firma em cartório, embora não obrigatório em todos os casos, aumenta a validade perante terceiros.',
+      purpose: 'As testemunhas provam que o ato foi voluntário. A validade definida protege o outorgante caso esqueça de revogar a procuração após cumprida a finalidade.',
+      error: 'Procurações sem prazo de validade ficam vigentes indefinidamente até revogação expressa. Isso é um risco se o outorgado mudar de comportamento ou se as circunstâncias mudarem.',
+      tip: '✏️ <b>Dica de Redação:</b> Para Mossoró/RN, o cartório mais indicado para reconhecimento de firma é o "1º Ofício de Notas de Mossoró". Em processos junto à RFB e SEFAZ, o reconhecimento de firma em cartório é fortemente recomendado.'
+    }
+  },
+  cont: {
+    objeto: {
+      title: '📋 Cláusula do Objeto — O Coração do Contrato',
+      meaning: 'A cláusula do objeto descreve com precisão tudo o que será feito: o tipo de serviço, o escopo exato, as entregas esperadas, as etapas e os limites do que está contratado.',
+      purpose: 'O objeto é a principal cláusula do contrato. Qualquer cobrança extra só é legítima se não estiver coberta pelo objeto. Um objeto vago permite que o contratado cobre por tudo; um objeto preciso protege o contratante.',
+      error: 'Escrever "prestação de serviços de consultoria" sem detalhar o quê, como, quantas horas, quais entregas, é uma das maiores fontes de litígios contratuais. Especifique: "análise de requisitos + desenvolvimento do módulo X + treinamento de 15 usuários + suporte de 6 meses".',
+      tip: '✏️ <b>Dica de Redação:</b> Use alíneas (a, b, c...) para listar cada entrega do objeto. Para serviços de TI, inclua sempre: ambiente de homologação, prazo de aceite de entrega e critério de qualidade. Isso evita a discussão de "se o serviço foi ou não prestado".'
+    },
+    valor: {
+      title: '💰 Valor, Pagamento e Multas por Atraso',
+      meaning: 'Esta cláusula define: valor total do contrato, parcelamento (se houver), forma de pagamento (boleto, PIX, transferência), data de vencimento, multa por atraso do contratante e juros moratórios.',
+      purpose: 'Clareza financeira evita inadimplência e discussões. O contratado sabe exatamente quando receberá; o contratante sabe exatamente quanto deverá pagar e quais são as penalidades por atraso.',
+      error: 'Contratos sem cláusula de multa por atraso colocam o prestador em posição vulnerável — o Código Civil prevê juros de 1% ao mês como padrão, mas podem ser negociados para 2% com multa de 10%, por exemplo.',
+      tip: '✏️ <b>Dica de Redação:</b> Padrão recomendado: "Multa de 2% sobre o valor da parcela + juros moratórios de 1% ao mês, proporcionais aos dias de atraso, a partir do vencimento." Inclua também se há desconto por pagamento antecipado.'
+    },
+    foro: {
+      title: '🏛️ Foro de Eleição — Mossoró/RN',
+      meaning: 'A cláusula de foro define em qual cidade as disputas judiciais decorrentes do contrato serão resolvidas. No modelo desta biblioteca, o foro eleito é a <b>Comarca de Mossoró/RN</b>.',
+      purpose: 'O foro protege a parte mais fraca logisticamente. Se uma empresa de São Paulo contratar um profissional de Mossoró/RN e o contrato for descumprido, sem cláusula de foro o processo poderia ser aberto em São Paulo — o que inviabiliza a defesa de quem está no interior do RN.',
+      error: 'Aceitar contrato com foro em cidade distante sem negociar a mudança é erro estratégico. Para profissionais de Mossoró/RN, sempre negocie o foro local.',
+      tip: '✏️ <b>Dica de Redação:</b> Texto padrão: "Fica eleito o foro da Comarca de Mossoró, Estado do Rio Grande do Norte, para dirimir quaisquer dúvidas ou controvérsias oriundas do presente instrumento, com expressa renúncia a qualquer outro, por mais privilegiado que seja."'
+    }
+  }
+};
+
+// ── DOCUMENT DEFINITIONS ─────────────────────────────
+var BLOCK_SELECTORS = {
+  oficio: {
+    cab:   ['#oficio-cab'],
+    dest:  ['#oficio-dest'],
+    texto: ['#oficio-texto']
+  },
+  memo: {
+    cab:   ['#memo-cab'],
+    dest:  ['#memo-dest'],
+    texto: ['#memo-texto']
+  },
+  req: {
+    qualif: ['#req-qualif'],
+    objeto: ['#req-objeto'],
+    enc:    ['#req-enc']
+  },
+  ata: {
+    qualif: ['#ata-qualif'],
+    delib:  ['#ata-delib'],
+    enc:    ['#ata-enc']
+  },
+  rel: {
+    cab:   ['#rel-cab'],
+    dados: ['#rel-dados'],
+    obs:   ['#rel-obs']
+  },
+  dec: {
+    qualif: ['#dec-qualif'],
+    objeto: ['#dec-objeto'],
+    enc:    ['#dec-enc']
+  },
+  proc: {
+    outorg:  ['#proc-outorg'],
+    poderes: ['#proc-poderes'],
+    enc:     ['#proc-enc']
+  },
+  cont: {
+    objeto: ['#cont-objeto'],
+    valor:  ['#cont-valor'],
+    foro:   ['#cont-foro']
+  }
+};
+
+// ── TOGGLE ───────────────────────────────────────────
+function toggleEduMode() {
+  eduMode = !eduMode;
+  var btn = document.getElementById('edu-toggle-btn');
+  var sidebar = document.getElementById('edu-sidebar');
+  if (eduMode) {
+    btn.textContent = '🎓 Modo Educativo: ON';
+    btn.classList.add('active');
+    sidebar.classList.add('visible');
+  } else {
+    btn.textContent = '🎓 Modo Educativo: OFF';
+    btn.classList.remove('active');
+    sidebar.classList.remove('visible');
+    clearHighlights();
+    resetSidebar();
+  }
+}
+
+function clearHighlights() {
+  document.querySelectorAll('.edu-highlight').forEach(function(el){
+    el.classList.remove('edu-highlight');
+  });
+  if (activeBlockBtn) activeBlockBtn.classList.remove('active');
+  activeBlockBtn = null;
+}
+
+function resetSidebar() {
+  document.getElementById('edu-sidebar-body').innerHTML =
+    '<div class="edu-idle"><span class="edu-idle-icon">👆</span>Selecione um documento e clique em um dos <strong>blocos coloridos</strong> no topo para ver a explicação didática.</div>';
+}
+
+// ── BLOCK NAVIGATION ─────────────────────────────────
+function renderBlocks(docId) {
+  var nav = document.getElementById('block-nav');
+  nav.innerHTML = '';
+  if (!BLOCKS[docId]) return;
+  BLOCKS[docId].forEach(function(b) {
+    var btn = document.createElement('button');
+    btn.className = 'block-btn';
+    btn.textContent = b.label;
+    btn.onclick = (function(bid, bBtn){ return function(){ showBlock(docId, bid, bBtn); }; })(b.id, btn);
+    nav.appendChild(btn);
+  });
+}
+
+function showBlock(docId, blockId, btnEl) {
+  clearHighlights();
+  activeBlockBtn = btnEl;
+  btnEl.classList.add('active');
+
+  // Highlight relevant elements
+  var selectors = (BLOCK_SELECTORS[docId] || {})[blockId] || [];
+  selectors.forEach(function(sel) {
+    var el = document.querySelector(sel);
+    if (el) el.classList.add('edu-highlight');
+  });
+
+  // Show edu info
+  var info = (EDU[docId] || {})[blockId];
+  if (!info) { resetSidebar(); return; }
+
+  var html = '<div class="edu-info">';
+  html += '<div class="edu-info-title">' + info.title + '</div>';
+  html += '<div class="edu-section"><div class="edu-section-label"><span>📖</span> Significado</div><div class="edu-section-text">' + info.meaning + '</div></div>';
+  html += '<div class="edu-section"><div class="edu-section-label"><span>🎯</span> Para que serve</div><div class="edu-section-text">' + info.purpose + '</div></div>';
+  if (info.error) {
+    html += '<div class="edu-section"><div class="edu-section-label"><span>⚠️</span> Erros Comuns</div><div class="edu-alert">' + info.error + '</div></div>';
+  }
+  if (info.tip) {
+    html += '<div class="edu-section"><div class="edu-section-label"><span>💡</span> Dica de Redação</div><div class="edu-tip">' + info.tip + '</div></div>';
+  }
+  html += '</div>';
+  document.getElementById('edu-sidebar-body').innerHTML = html;
+}
+
+// ── NAVIGATION ────────────────────────────────────────
+var currentBtn = null;
+function show(id) {
+  if (currentBtn) document.getElementById(currentBtn).classList.remove('active');
+  document.getElementById('btn-' + id).classList.add('active');
+  currentBtn = 'btn-' + id;
+  currentDoc = id;
+  var titles = {
+    oficio:'Ofício',memo:'Memorando Interno',req:'Requerimento',ata:'Ata de Reunião',
+    rel:'Relatório Gerencial',dec:'Declaração',proc:'Procuração Particular',cont:'Contrato de Prestação de Serviços'
+  };
+  document.getElementById('preview-title').textContent = titles[id] || id;
+  document.getElementById('preview-body').innerHTML = docs[id];
+  clearHighlights();
+  resetSidebar();
+  renderBlocks(id);
+}
+
+var docs = {};
+
+// ── DOCUMENTOS ───────────────────────────────────────
+
+docs['oficio'] = `
+<div class="doc" style="font-family:'Times New Roman',serif;padding:30px 36px;line-height:1.9">
+  <div id="oficio-cab" style="text-align:center;margin-bottom:16px">
+    <div style="font-size:12px;font-weight:bold;text-transform:uppercase">Prefeitura Municipal de Mossoró</div>
+    <div style="font-size:9px">Secretaria Municipal de Finanças</div>
+    <div style="font-size:9px">Rua Adolfo Gordo, 450 — Centro — Mossoró / RN — CEP: 59.600-290</div>
+    <div style="font-size:9px">Tel: (84) 3315-0000 &nbsp;|&nbsp; E-mail: smf@mossoro.rn.gov.br</div>
+    <div style="margin-top:8px;border-top:1px solid #333;border-bottom:1px solid #333;padding:4px 0;font-size:10px;font-weight:bold">
+      OFÍCIO Nº 082/2026 — SMF
+    </div>
+    <div style="text-align:right;font-size:9px;margin-top:10px">Mossoró (RN), 22 de abril de 2026.</div>
+  </div>
+  <div id="oficio-dest" style="font-size:9px;margin-bottom:12px">
+    <b>A Sua Senhoria o Senhor</b><br>
+    Dr. Carlos Eduardo Ferreira<br>
+    Secretário de Estado da Fazenda do Rio Grande do Norte<br>
+    SEFAZ/RN — Natal / RN
+  </div>
+  <div id="oficio-texto" style="font-size:9px">
+    <div style="margin-bottom:10px"><b>Assunto:</b> Solicitação de informações sobre débitos de IPVA — Exercício 2026.</div>
+    <p style="text-indent:30px;margin-bottom:9px">Senhor Secretário,</p>
+    <p style="text-indent:30px;margin-bottom:9px">Cumprimentando-o cordialmente, vimos, por intermédio deste, solicitar o envio de relação atualizada dos débitos de Imposto sobre a Propriedade de Veículos Automotores (IPVA) referentes a veículos registrados neste Município, relativa ao exercício fiscal de 2026, para fins de cruzamento com o cadastro de contribuintes desta Secretaria Municipal de Finanças.</p>
+    <p style="text-indent:30px;margin-bottom:9px">Informamos que as informações solicitadas serão utilizadas exclusivamente para fins de fiscalização e controle interno, em estrita conformidade com o disposto no art. 198 do Código Tributário Nacional (Lei nº 5.172/1966) e demais normas regulamentadoras aplicáveis ao intercâmbio de informações fiscais entre entes federativos.</p>
+    <p style="text-indent:30px;margin-bottom:16px">Certos de vossa atenção e colaboração, colocamo-nos à inteira disposição para quaisquer esclarecimentos adicionais que se façam necessários.</p>
+    <p style="margin-bottom:36px">Atenciosamente,</p>
+  </div>
+  <div style="text-align:center;font-size:9px;margin-top:4px">
+    <div>___________________________________________</div>
+    <div><b>Ana Paula Rodrigues Costa</b></div>
+    <div>Secretária Municipal de Finanças</div>
+    <div>CPF: ***.234.567-** &nbsp;|&nbsp; Matrícula: 45.678</div>
+  </div>
+</div>`;
+
+docs['memo'] = `
+<div class="doc" style="font-family:Arial,sans-serif;padding:0">
+  <div id="memo-cab" style="background:#2c5282;color:white;padding:10px 16px">
+    <div style="font-size:11px;font-weight:bold">MEMORANDO INTERNO — Nº 14/2026</div>
+    <div style="font-size:8.5px;opacity:0.85">EMPRESA MODELO LTDA — Comunicação Interna</div>
+  </div>
+  <div id="memo-dest">
+    <table style="margin:12px 14px;width:calc(100% - 28px);font-size:9px;border-collapse:collapse">
+      <tr><td width="14%" style="border:0.5px solid #ccc;padding:4px;background:#eef3fc;font-weight:bold">DE:</td><td style="border:0.5px solid #ccc;padding:4px">Patrícia Mendes — Gerência de Recursos Humanos</td></tr>
+      <tr><td style="border:0.5px solid #ccc;padding:4px;background:#eef3fc;font-weight:bold">PARA:</td><td style="border:0.5px solid #ccc;padding:4px">Todos os Colaboradores — Sede Mossoró</td></tr>
+      <tr><td style="border:0.5px solid #ccc;padding:4px;background:#eef3fc;font-weight:bold">CC:</td><td style="border:0.5px solid #ccc;padding:4px">Diretoria Executiva; Gerências de Área</td></tr>
+      <tr><td style="border:0.5px solid #ccc;padding:4px;background:#eef3fc;font-weight:bold">ASSUNTO:</td><td style="border:0.5px solid #ccc;padding:4px">Atualização do Sistema de Ponto Eletrônico — Migração para PontoDigital v3.0</td></tr>
+      <tr><td style="border:0.5px solid #ccc;padding:4px;background:#eef3fc;font-weight:bold">DATA:</td><td style="border:0.5px solid #ccc;padding:4px">22 de abril de 2026</td></tr>
+    </table>
+  </div>
+  <div id="memo-texto" style="padding:0 14px 14px;font-size:9px;line-height:1.7">
+    <p style="margin-bottom:8px">Comunicamos a todos que, a partir de <b>02 de maio de 2026 (segunda-feira)</b>, o sistema de registro de ponto eletrônico será migrado para a plataforma <b>PontoDigital v3.0</b>, em atendimento à Portaria MTP nº 671/2021.</p>
+    <p style="margin-bottom:6px"><b>Principais mudanças:</b></p>
+    <div style="padding-left:16px;margin-bottom:8px">
+      — Acesso exclusivamente pelo aplicativo no smartphone;<br>
+      — O reconhecimento facial substituirá a senha numérica atual;<br>
+      — Solicitações de abono passarão a ser feitas diretamente no app.
+    </div>
+    <p style="margin-bottom:8px"><b>Capacitações:</b> Sessões nos dias <b>28, 29 e 30/04</b>, divididas por setor. O convite será encaminhado por e-mail corporativo.</p>
+    <p>Dúvidas: ramal <b>2200</b> ou <b>rh@empresamodelo.com.br</b>.</p>
+    <div style="border-top:1px solid #ddd;padding-top:10px;margin-top:12px">
+      <div><b>Patrícia Mendes</b></div>
+      <div>Gerente de Recursos Humanos</div>
+    </div>
+  </div>
+</div>`;
+
+docs['req'] = `
+<div class="doc" style="font-family:'Times New Roman',serif;padding:30px 36px;line-height:1.9">
+  <div style="text-align:center;font-size:12px;font-weight:bold;text-transform:uppercase;border-bottom:1px solid #333;padding-bottom:8px;margin-bottom:18px">Requerimento</div>
+  <div id="req-qualif">
+    <p style="font-size:9px;text-indent:30px;margin-bottom:12px"><b>MARIA JOSÉ ALVES PINHEIRO</b>, brasileira, casada, professora, portadora do RG nº 1.234.567 — SSP/RN, inscrita no CPF/MF sob o nº ***.456.789-**, residente e domiciliada à Rua das Palmeiras, nº 110, Bairro Abolição, Mossoró/RN, CEP: 59.628-110, e-mail: mjpinheiro@email.com, vem, respeitosamente, à presença de Vossa Senhoria requerer o que segue:</p>
+  </div>
+  <div id="req-objeto">
+    <div style="text-align:center;font-size:10px;font-weight:bold;margin:12px 0;text-decoration:underline">DO OBJETO DO REQUERIMENTO</div>
+    <p style="font-size:9px;text-indent:30px;margin-bottom:9px">A requerente solicita a emissão de <b>Certidão Negativa de Débitos Fiscais Municipais</b> em seu nome, relativa aos tributos: IPTU, ISS e taxas de serviços públicos, para fins de apresentação junto à Caixa Econômica Federal no processo de contratação de financiamento imobiliário pelo Programa Minha Casa, Minha Vida (processo nº CEF/2026/0034521).</p>
+    <div style="text-align:center;font-size:10px;font-weight:bold;margin:12px 0;text-decoration:underline">DOS DOCUMENTOS ANEXOS</div>
+    <div style="font-size:9px;padding-left:20px;margin-bottom:14px;line-height:2">
+      I — Cópia do Documento de Identidade (RG) e CPF;<br>
+      II — Comprovante de residência atualizado;<br>
+      III — Número do processo de financiamento (CEF/2026/0034521).
+    </div>
+  </div>
+  <div id="req-enc">
+    <p style="font-size:9px;text-indent:30px;margin-bottom:20px">Nestes termos, pede deferimento.</p>
+    <div style="text-align:right;font-size:9px;margin-bottom:28px">Mossoró (RN), 22 de abril de 2026.</div>
+    <div style="text-align:center;font-size:9px">
+      <div>___________________________________________</div>
+      <div><b>Maria José Alves Pinheiro</b></div>
+      <div>CPF: ***.456.789-**</div>
+    </div>
+  </div>
+</div>`;
+
+docs['ata'] = `
+<div class="doc" style="font-family:'Times New Roman',serif;padding:26px 32px;line-height:1.85">
+  <div style="text-align:center;font-size:11px;font-weight:bold;text-transform:uppercase;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:14px">ATA DE REUNIÃO Nº 003/2026</div>
+  <div id="ata-qualif" style="font-size:9px;margin-bottom:10px">
+    <b>Data:</b> 22 de abril de 2026 &nbsp;&nbsp; <b>Hora de início:</b> 14h00 &nbsp;&nbsp; <b>Hora de término:</b> 16h15<br>
+    <b>Local:</b> Sala de Reuniões B — 2º andar — EMPRESA MODELO LTDA — Mossoró/RN<br>
+    <b>Pauta:</b> Revisão do fluxo de emissão de NF-e e adequação ao novo layout 4.00 da SEFAZ<br>
+    <b>PRESENTES:</b> Roberto Lima (Diretor), Patrícia Mendes (RH), Carlos Ramos (TI), Ana Souza (Fiscal), Marcos Pinto (Contabilidade).
+  </div>
+  <div id="ata-delib">
+    <div style="font-size:9px;margin-bottom:4px;font-weight:bold;text-decoration:underline">1. ABERTURA</div>
+    <p style="font-size:9px;text-indent:20px;margin-bottom:8px">O Diretor Roberto Lima declarou aberta a reunião às 14h00 e apresentou a pauta aos presentes.</p>
+    <div style="font-size:9px;margin-bottom:4px;font-weight:bold;text-decoration:underline">2. DELIBERAÇÕES</div>
+    <p style="font-size:9px;text-indent:20px;margin-bottom:6px"><b>2.1</b> O responsável de TI, Carlos Ramos, informou que a migração para o layout NF-e 4.00 está prevista para 01/05/2026, com testes em ambiente de homologação já concluídos.</p>
+    <p style="font-size:9px;text-indent:20px;margin-bottom:6px"><b>2.2</b> A analista fiscal Ana Souza alertou que o novo campo "indPres" (indicador de presença do comprador) passa a ser obrigatório. Ficou definido que o preenchimento padrão será código 9 — Operação não presencial, outros.</p>
+    <p style="font-size:9px;text-indent:20px;margin-bottom:10px"><b>2.3</b> Aprovado por unanimidade o cronograma de atualização com capacitação do time fiscal nos dias 28 e 29/04/2026.</p>
+  </div>
+  <div id="ata-enc">
+    <div style="font-size:9px;margin-bottom:4px;font-weight:bold;text-decoration:underline">3. ENCERRAMENTO</div>
+    <p style="font-size:9px;text-indent:20px;margin-bottom:20px">Nada mais havendo a tratar, o Diretor encerrou a reunião às 16h15. Eu, Ana Souza, secretariei e lavrei a presente ata que, lida e aprovada, será assinada por todos os presentes.</p>
+    <div style="display:flex;justify-content:space-between;font-size:9px;text-align:center;flex-wrap:wrap;gap:12px">
+      <div><div>___________________</div><div>Roberto Lima</div><div>Diretor</div></div>
+      <div><div>___________________</div><div>Patrícia Mendes</div><div>RH</div></div>
+      <div><div>___________________</div><div>Carlos Ramos</div><div>TI</div></div>
+      <div><div>___________________</div><div>Ana Souza</div><div>Fiscal / Secretária</div></div>
+      <div><div>___________________</div><div>Marcos Pinto</div><div>Contabilidade</div></div>
+    </div>
+  </div>
+</div>`;
+
+docs['rel'] = `
+<div class="doc" style="font-family:Arial,sans-serif;padding:20px">
+  <div id="rel-cab" style="background:#1a3a5c;color:white;padding:12px 18px;border-radius:4px;margin-bottom:14px">
+    <div style="font-size:13px;font-weight:bold">RELATÓRIO GERENCIAL — ABRIL / 2026</div>
+    <div style="font-size:9px;opacity:0.85">EMPRESA MODELO LTDA &nbsp;|&nbsp; Emitido em: 22/04/2026 &nbsp;|&nbsp; Responsável: Marcos Pinto (Contabilidade)</div>
+  </div>
+  <div id="rel-dados">
+    <table style="font-size:9px;margin-bottom:12px">
+      <tr class="header-blue"><td colspan="4">RESUMO FINANCEIRO</td></tr>
+      <tr><td><b>Receita Bruta</b></td><td style="text-align:right">R$ 285.400,00</td><td><b>Meta do Mês</b></td><td style="text-align:right">R$ 250.000,00</td></tr>
+      <tr class="key-row"><td><b>Deduções (impostos)</b></td><td style="text-align:right;color:#c00">— R$ 42.810,00</td><td><b>Realizado vs Meta</b></td><td style="text-align:right;color:green">+14,2%</td></tr>
+      <tr><td><b>Receita Líquida</b></td><td style="text-align:right">R$ 242.590,00</td><td><b>Ticket Médio NF-e</b></td><td style="text-align:right">R$ 7.840,00</td></tr>
+      <tr class="key-row"><td><b>Custo das Mercadorias</b></td><td style="text-align:right">R$ 148.208,00</td><td><b>Margem Bruta</b></td><td style="text-align:right;color:green">38,9%</td></tr>
+    </table>
+    <table style="font-size:9px;margin-bottom:12px">
+      <tr><th>Tipo Doc.</th><th style="text-align:right">Qtd.</th><th style="text-align:right">Total (R$)</th><th style="text-align:right">Cancelados</th></tr>
+      <tr><td>NF-e Saída</td><td style="text-align:right">36</td><td style="text-align:right">282.240,00</td><td style="text-align:right">2</td></tr>
+      <tr class="key-row"><td>NFS-e</td><td style="text-align:right">8</td><td style="text-align:right">60.000,00</td><td style="text-align:right">0</td></tr>
+      <tr><td>NFC-e</td><td style="text-align:right">412</td><td style="text-align:right">38.480,00</td><td style="text-align:right">15</td></tr>
+    </table>
+  </div>
+  <div id="rel-obs" style="font-size:9px;border:1px solid #ddd;border-radius:4px;padding:8px 12px">
+    <b>Observações do Contador:</b> A margem bruta superou a meta em virtude do reajuste de preços aplicado em 01/04/2026. Os 2 cancelamentos de NF-e ocorreram por erro de CFOP, corrigido na reemissão. <b>⚠ Atenção:</b> guia DARF do PIS/COFINS com vencimento em 25/04/2026 no valor de R$ 12.430,00.
+  </div>
+</div>`;
+
+docs['dec'] = `
+<div class="doc" style="font-family:'Times New Roman',serif;padding:30px 36px;line-height:1.9">
+  <div style="text-align:center;font-size:12px;font-weight:bold;text-transform:uppercase;border-bottom:1px solid #333;padding-bottom:8px;margin-bottom:20px">Declaração</div>
+  <div id="dec-qualif">
+    <p style="font-size:9px;text-indent:30px;margin-bottom:12px">Eu, <b>JOÃO BATISTA FERREIRA NETO</b>, brasileiro, solteiro, contador, inscrito no CRC/RN sob o nº 12.345-0, portador do CPF nº ***.678.901-**, com escritório profissional à Rua das Nações, 200 — Sala 304 — Centro — Mossoró/RN, declaro para os devidos fins de direito que:</p>
+  </div>
+  <div id="dec-objeto">
+    <p style="font-size:9px;text-indent:30px;margin-bottom:10px">A empresa <b>COMERCIAL NORDESTE LTDA</b>, inscrita no CNPJ/MF sob o nº 44.555.666/0001-77, com sede à Av. Rio Branco, 1500 — Mossoró/RN, encontra-se em situação fiscal <b>REGULAR</b> perante a Receita Federal do Brasil, a Secretaria de Estado da Fazenda do Rio Grande do Norte (SEFAZ/RN) e a Secretaria Municipal de Finanças de Mossoró (SMF), relativamente aos exercícios fiscais de 2024 e 2025.</p>
+    <p style="font-size:9px;text-indent:30px;margin-bottom:10px">As obrigações acessórias (SPED Fiscal, SPED Contábil, EFD-Contribuições, DCTF e ECF) foram entregues dentro dos prazos estabelecidos. Não há parcelamentos fiscais em aberto, débitos em cobrança ou autuações pendentes nas esferas federal, estadual ou municipal.</p>
+    <p style="font-size:9px;text-indent:30px;margin-bottom:20px">Esta declaração é emitida a pedido do interessado para fins de habilitação em processo licitatório (Edital nº 005/2026 — Prefeitura Municipal de Mossoró), sendo verdadeiras todas as informações aqui prestadas, sob as penas da lei.</p>
+  </div>
+  <div id="dec-enc">
+    <div style="text-align:right;font-size:9px;margin-bottom:28px">Mossoró (RN), 22 de abril de 2026.</div>
+    <div style="text-align:center;font-size:9px">
+      <div>___________________________________________</div>
+      <div><b>João Batista Ferreira Neto</b></div>
+      <div>Contador — CRC/RN 12.345-0</div>
+      <div>CPF: ***.678.901-**</div>
+    </div>
+  </div>
+</div>`;
+
+docs['proc'] = `
+<div class="doc" style="font-family:'Times New Roman',serif;padding:26px 32px;line-height:1.85">
+  <div style="text-align:center;font-size:11px;font-weight:bold;text-transform:uppercase;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:14px">Procuração Particular</div>
+  <div id="proc-outorg">
+    <p style="font-size:9px;text-indent:20px;margin-bottom:10px"><b>OUTORGANTE:</b> <b>CARLOS AUGUSTO LIMA NETO</b>, brasileiro, empresário, portador do RG nº 2.345.678 SSP/RN, inscrito no CPF/MF sob o nº ***.678.901-**, residente e domiciliado à Rua das Acácias, 300 — Bairro Centro — Mossoró/RN, CEP: 59.600-000.</p>
+    <p style="font-size:9px;text-indent:20px;margin-bottom:10px"><b>OUTORGADO:</b> <b>DRA. FERNANDA QUEIROZ ALBUQUERQUE</b>, brasileira, advogada, inscrita na OAB/RN sob o nº 8.765, portadora do CPF/MF nº ***.321.654-**, com escritório à Av. Presidente Dutra, 800, sala 212 — Mossoró/RN, CEP: 59.610-000.</p>
+  </div>
+  <div id="proc-poderes">
+    <div style="font-size:9px;margin-bottom:4px;font-weight:bold;text-decoration:underline">PODERES OUTORGADOS:</div>
+    <p style="font-size:9px;text-indent:20px;margin-bottom:10px">Pelo presente instrumento particular, o OUTORGANTE confere à OUTORGADA poderes amplos e gerais para representá-lo perante a Receita Federal do Brasil, SEFAZ/RN, Prefeituras Municipais e quaisquer outros órgãos públicos, podendo assinar documentos, requerer certidões, apresentar defesas e recursos administrativos, receber intimações e praticar todos os demais atos necessários ao fiel cumprimento deste mandato, relativos às obrigações tributárias do CNPJ 44.555.666/0001-77, nos exercícios fiscais de 2025 e 2026.</p>
+    <div style="font-size:9px;margin-bottom:8px"><b>SUBSTABELECIMENTO:</b> Com reserva de iguais poderes.</div>
+  </div>
+  <div id="proc-enc">
+    <div style="font-size:9px;margin-bottom:18px"><b>VALIDADE:</b> 12 (doze) meses a contar da data de assinatura.</div>
+    <div style="text-align:right;font-size:9px;margin-bottom:36px">Mossoró (RN), 22 de abril de 2026.</div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;text-align:center;margin-top:10px">
+      <div><div>_______________________</div><div><b>Carlos Augusto Lima Neto</b></div><div>Outorgante — CPF: ***.678.901-**</div></div>
+      <div><div>_______________________</div><div>1ª Testemunha</div><div>CPF: ***.111.222-**</div></div>
+      <div><div>_______________________</div><div>2ª Testemunha</div><div>CPF: ***.333.444-**</div></div>
+    </div>
+    <div style="margin-top:14px;font-size:8px;border:1px dashed #aaa;padding:5px;text-align:center">Reconhecimento de Firma: Cartório 1º Ofício de Notas de Mossoró — Livro 12, Folha 88</div>
+  </div>
+</div>`;
+
+docs['cont'] = `
+<div class="doc" style="font-family:'Times New Roman',serif;padding:26px 32px;line-height:1.85">
+  <div style="text-align:center;font-size:11px;font-weight:bold;text-transform:uppercase;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:14px">Contrato de Prestação de Serviços nº 2026/019</div>
+  <div style="font-size:9px;margin-bottom:8px"><b>CONTRATANTE:</b> <b>EMPRESA MODELO LTDA</b>, pessoa jurídica de direito privado, inscrita no CNPJ/MF sob o nº 12.345.678/0001-90, com sede à Rua das Flores, 100 — Mossoró/RN, representada por seu Diretor Executivo, Sr. Roberto Lima.</div>
+  <div style="font-size:9px;margin-bottom:12px"><b>CONTRATADA:</b> <b>CONSULTORIA DIGITAL EIRELI</b>, pessoa jurídica de direito privado, inscrita no CNPJ/MF sob o nº 45.678.901/0001-23, com sede à Av. Rio Branco, 250 — Mossoró/RN, representada por sua Sócia-Administradora, Sra. Marcela Andrade.</div>
+  <div id="cont-objeto">
+    <div style="font-size:9px;margin-bottom:4px;font-weight:bold;text-decoration:underline">CLÁUSULA PRIMEIRA — DO OBJETO</div>
+    <p style="font-size:9px;text-indent:20px;margin-bottom:10px">O presente contrato tem por objeto a prestação de serviços de consultoria em tecnologia da informação, compreendendo: (a) análise e levantamento de requisitos do sistema ERP; (b) desenvolvimento e implantação do módulo financeiro; (c) treinamento de até 15 usuários; e (d) suporte técnico mensal por 6 meses após o go-live.</p>
+    <div style="font-size:9px;margin-bottom:4px;font-weight:bold;text-decoration:underline">CLÁUSULA SEGUNDA — DO PRAZO</div>
+    <p style="font-size:9px;text-indent:20px;margin-bottom:10px">O presente contrato terá vigência de 12 (doze) meses, com início em 01/05/2026 e término em 30/04/2027, podendo ser renovado mediante instrumento aditivo assinado por ambas as partes antes do término da vigência.</p>
+  </div>
+  <div id="cont-valor">
+    <div style="font-size:9px;margin-bottom:4px;font-weight:bold;text-decoration:underline">CLÁUSULA TERCEIRA — DO VALOR E FORMA DE PAGAMENTO</div>
+    <p style="font-size:9px;text-indent:20px;margin-bottom:10px">O valor total do contrato é de <b>R$ 60.000,00</b> (sessenta mil reais), devidos em 12 (doze) parcelas mensais de R$ 5.000,00, mediante emissão de NFS-e pela CONTRATADA, com vencimento no dia 10 do mês subsequente. <b>Multa por atraso: 2% sobre o valor da parcela + juros de 1% ao mês pro rata die.</b></p>
+    <div style="font-size:9px;margin-bottom:4px;font-weight:bold;text-decoration:underline">CLÁUSULA QUARTA — DA RESCISÃO</div>
+    <p style="font-size:9px;text-indent:20px;margin-bottom:10px">Este contrato poderá ser rescindido por qualquer das partes mediante aviso prévio de 30 (trinta) dias, por escrito. Em caso de rescisão imotivada pela CONTRATANTE, será devida multa de 20% sobre o saldo das parcelas remanescentes.</p>
+  </div>
+  <div id="cont-foro">
+    <div style="font-size:9px;margin-bottom:4px;font-weight:bold;text-decoration:underline">CLÁUSULA QUINTA — DO FORO</div>
+    <p style="font-size:9px;text-indent:20px;margin-bottom:18px">Fica eleito o foro da <b>Comarca de Mossoró, Estado do Rio Grande do Norte</b>, para dirimir quaisquer controvérsias oriundas do presente instrumento, com expressa renúncia a qualquer outro, por mais privilegiado que seja.</p>
+    <div style="text-align:center;font-size:9px;margin-bottom:32px">Mossoró (RN), 22 de abril de 2026.</div>
+    <div style="display:flex;justify-content:space-around;font-size:9px;text-align:center">
+      <div><div>___________________________</div><div><b>Roberto Lima</b></div><div>CONTRATANTE</div></div>
+      <div><div>___________________________</div><div><b>Marcela Andrade</b></div><div>CONTRATADA</div></div>
+    </div>
+    <div style="display:flex;justify-content:space-around;font-size:9px;text-align:center;margin-top:22px">
+      <div><div>_____________________</div><div>1ª Testemunha</div><div>CPF: ***.111.000-**</div></div>
+      <div><div>_____________________</div><div>2ª Testemunha</div><div>CPF: ***.222.000-**</div></div>
+    </div>
+  </div>
+</div>`;
+
+</script>
+</body>
+</html>
